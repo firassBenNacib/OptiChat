@@ -11,4 +11,4 @@ COPY target/appfor-0.0.1-SNAPSHOT.jar appfor-0.0.1-SNAPSHOT.jar
 EXPOSE 8082
 
 # Set the command to run your Spring application when the container starts
-CMD ["java", "-jar", "appfor-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "/appfor-0.0.1-SNAPSHOT.jar"]
