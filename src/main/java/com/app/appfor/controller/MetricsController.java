@@ -67,4 +67,9 @@ public class MetricsController {
         httpRequestsCounter.increment();
         return "Hello";
     }
+    @GetMapping("/hello2")
+    public String hello2() {
+        httpRequestsCounter.increment();
+        return "Hello";
+    }
 }
