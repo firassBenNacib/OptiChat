@@ -7,7 +7,7 @@ pipeline {
         pollSCM 'H * * * *'
     }
     stages{
-        stage('Build Maven'){
+        stage('Build Maven '){
             steps{
               checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/firassBenNacib/appfor']]])
                 sh 'mvn clean install'
