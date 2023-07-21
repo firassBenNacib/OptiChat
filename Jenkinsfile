@@ -33,4 +33,5 @@ withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd'
         }
   
     }
-}
+
+  }
