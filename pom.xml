@@ -15,6 +15,16 @@
 	<description>a Spring Boot app to use with promethues</description>
 	<properties>
 		<java.version>11</java.version>
+		<jacoco-maven-plugin>0.8.6</jacoco-maven-plugin>
+		<sonar.core.codeCoveragePlugin>jacoco</sonar.core.codeCoveragePlugin>
+		<sonar.sources>src/main</sonar.sources>
+		<sonar.tests>src/test</sonar.tests>
+		<runSuite>**/*Test.class</runSuite>
+		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+		<sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../target/jacoco.exec</sonar.coverage.jacoco.xmlReportPaths>
+		<sonar.jacoco.reportPaths>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPaths>
+		<sonar.language>java</sonar.language>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -53,12 +63,64 @@
 
 	<build>
 
-    <plugins>
-        <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-        </plugin>
-    </plugins>
+		<plugins>
+			<!-- Other plugins ... -->
+
+			<!-- Spring Boot Maven Plugin -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+
+			<!-- Maven Compiler Plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<release>${java.version}</release>
+				</configuration>
+			</plugin>
+
+			<!-- Maven Surefire Plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22.2</version>
+				<configuration>
+					<!-- Use forking with 1 fork to enable Jacoco coverage -->
+					<forkCount>1</forkCount>
+					<reuseForks>true</reuseForks>
+					<!-- Optionally, you can include test classes you want to run -->
+					<includes>
+						<include>${runSuite}</include>
+					</includes>
+				</configuration>
+			</plugin>
+
+			<!-- JaCoCo Maven Plugin -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.4</version>
+				<configuration>
+					<!-- The destination file for JaCoCo coverage report -->
+					<destFile>${sonar.jacoco.reportPaths}</destFile>
+					<!-- Append coverage to an existing report (if any) -->
+					<append>true</append>
+				</configuration>
+				<executions>
+					<!-- Prepare JaCoCo agent before tests run -->
+					<execution>
+						<id>agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+
 
 	</build>
 
