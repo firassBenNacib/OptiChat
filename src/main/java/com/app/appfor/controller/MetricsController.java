@@ -58,17 +58,12 @@ public class MetricsController {
         }
     }
 
-    public double getTrafficCount() {
+    private double getTrafficCount() {
         return trafficCount;
     }
 
     @GetMapping("/hello")
     public String hello() {
-        httpRequestsCounter.increment();
-        return "Hello";
-    }
-    @GetMapping("/hello2")
-    public String hello2() {
         httpRequestsCounter.increment();
         return "Hello";
     }
