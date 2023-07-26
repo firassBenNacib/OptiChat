@@ -12,19 +12,10 @@
 	<artifactId>appfor</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>appfor</name>
-	<description>a Spring Boot app to use with promethues</description>
+	<description>a Spring Boot app to use with prometheus</description>
 	<properties>
 		<java.version>11</java.version>
-		<jacoco-maven-plugin>0.8.6</jacoco-maven-plugin>
-		<sonar.core.codeCoveragePlugin>jacoco</sonar.core.codeCoveragePlugin>
-		<sonar.sources>src/main</sonar.sources>
-		<sonar.tests>src/test</sonar.tests>
-		<runSuite>**/*Test.class</runSuite>
-		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-		<sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../target/jacoco.exec</sonar.coverage.jacoco.xmlReportPaths>
-		<sonar.jacoco.reportPaths>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPaths>
-		<sonar.language>java</sonar.language>
+		<junit.version>5.8.1</junit.version> <!-- Use JUnit 5.8.1 -->
 	</properties>
 	<dependencies>
 		<dependency>
@@ -36,6 +27,18 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>3.12.4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>
 		</dependency>
@@ -44,9 +47,6 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-
-
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -59,10 +59,7 @@
 			<optional>true</optional>
 		</dependency>
 	</dependencies>
-
-
 	<build>
-
 		<plugins>
 			<!-- Other plugins ... -->
 
@@ -92,9 +89,7 @@
 					<forkCount>1</forkCount>
 					<reuseForks>true</reuseForks>
 					<!-- Optionally, you can include test classes you want to run -->
-					<includes>
-						<include>${runSuite}</include>
-					</includes>
+
 				</configuration>
 			</plugin>
 
@@ -102,26 +97,29 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.4</version>
+				<version>0.8.8</version> <!-- Update to a more recent version -->
 				<configuration>
-					<!-- The destination file for JaCoCo coverage report -->
-					<destFile>${sonar.jacoco.reportPaths}</destFile>
-					<!-- Append coverage to an existing report (if any) -->
-					<append>true</append>
+					<excludes>
+						<exclude>java/util/UUID</exclude> <!-- Exclude java.util.UUID from instrumentation -->
+					</excludes>
 				</configuration>
 				<executions>
-					<!-- Prepare JaCoCo agent before tests run -->
 					<execution>
-						<id>agent</id>
+						<id>jacoco-initialize</id>
+						<phase>process-resources</phase>
 						<goals>
 							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>jacoco-site</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>report</goal>
 						</goals>
 					</execution>
 				</executions>
 			</plugin>
 		</plugins>
-
-
 	</build>
-
 </project>
