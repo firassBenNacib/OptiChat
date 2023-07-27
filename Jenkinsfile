@@ -41,9 +41,7 @@ stage("Sonarqube Analysis") {
 }
    stage("Quality gate") {
             steps {
-			withSonarQubeEnv('Sonar-Server') {
                 waitForQualityGate abortPipeline: true
-            }
 			}
         }
 
