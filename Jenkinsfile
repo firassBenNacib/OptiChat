@@ -38,12 +38,22 @@ stage("Sonarqube Analysis") {
             """
         }
     }
-}
-   stage("Quality gate") {
-            steps {
-                waitForQualityGate abortPipeline: true
-			}
+    post {
+        always {
+            // This step will trigger the webhook after the SonarQube analysis is complete
+            script {
+                def response = httpRequest(
+                    httpMode: 'POST',
+                    url: 'http://localhost:8081/sonarqube-webhook/',
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: '{}'
+                )
+                echo "SonarQube webhook response status: ${response.status}"
+            }
         }
+    }
+}
+
 
 
         
