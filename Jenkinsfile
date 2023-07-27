@@ -17,7 +17,7 @@ pipeline {
         
         stage("Test Cases") {
             steps {
-                sh "mvn test"
+                sh "mvn clean test jacoco:report"
             }
         }
         
@@ -41,7 +41,7 @@ stage("Sonarqube Analysis") {
 }
    stage("Quality gate") {
             steps {
-                 timeout(time: 2, unit: 'MINUTES') {
+                 timeout(time: 10, unit: 'MINUTES') {
                 waitForQualityGate abortPipeline: true
 			}
         }
