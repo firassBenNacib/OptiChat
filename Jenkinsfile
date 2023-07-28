@@ -71,22 +71,34 @@ stage("Sonarqube Analysis") {
 
 
 }
-post {
+ post {
         success {
-            slackSend(
-                color: 'good',
-                message: "Build successful! :white_check_mark:",
-                channel: '#jenkins',
-                tokenCredentialId: 'Slack-Token'
-            )
+            script {
+                slackSend(
+                    color: 'good',
+                    message: "Build successful! :white_check_mark:",
+                    channel: '#jenkins',
+                    tokenCredentialId: 'Slack-Token'
+                )
+                emailext body: "Build successful! :white_check_mark:", 
+                         subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!", 
+                         to: "recipient@example.com", 
+                         mimeType: 'text/plain'
+            }
         }
         failure {
-            slackSend(
-                color: 'danger',
-                message: "Build failed! :x:",
-                channel: '#jenkins',
-                tokenCredentialId: 'Slack-Token'
-            )
+            script {
+                slackSend(
+                    color: 'danger',
+                    message: "Build failed! :x:",
+                    channel: '#jenkins',
+                    tokenCredentialId: 'Slack-Token'
+                )
+                emailext body: "Build failed! :x:", 
+                         subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!", 
+                         to: "recipient@example.com", 
+                         mimeType: 'text/plain'
+            }
         }
     }
 }
