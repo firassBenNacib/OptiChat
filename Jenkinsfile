@@ -68,5 +68,12 @@ stage("Sonarqube Analysis") {
                 }
             }
         }
+
+    stage('Slack') {
+      steps {
+        slackSend color: 'good', message: 'success'
+      }
     }
+  
 }
+    }
