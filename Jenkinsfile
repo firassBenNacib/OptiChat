@@ -80,9 +80,9 @@ stage("Sonarqube Analysis") {
                     channel: '#jenkins',
                     tokenCredentialId: 'Slack-Token'
                 )
-                emailext body: "Build successful! :white_check_mark:", 
+                emailext body: "Build successful!", 
                          subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!", 
-                         to: "recipient@example.com", 
+                         to: "firas.bennacib@esprit.tn", 
                          mimeType: 'text/plain'
             }
         }
@@ -94,9 +94,9 @@ stage("Sonarqube Analysis") {
                     channel: '#jenkins',
                     tokenCredentialId: 'Slack-Token'
                 )
-                emailext body: "Build failed! :x:", 
+                emailext body: "Build failed!", 
                          subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!", 
-                         to: "recipient@example.com", 
+                         to: "firas.bennacib@esprit.tn", 
                          mimeType: 'text/plain'
             }
         }
