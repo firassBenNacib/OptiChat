@@ -69,11 +69,24 @@ stage("Sonarqube Analysis") {
             }
         }
 
-    stage('Slack') {
-      steps {
-        slackSend color: 'good', message: 'success'
-      }
-    }
-  
+
 }
+post {
+        success {
+            slackSend(
+                color: 'good',
+                message: "Build successful! :white_check_mark:",
+                channel: '#jenkins',
+                tokenCredentialId: 'Slack-Token'
+            )
+        }
+        failure {
+            slackSend(
+                color: 'danger',
+                message: "Build failed! :x:",
+                channel: '#jenkins',
+                tokenCredentialId: 'Slack-Token'
+            )
+        }
     }
+}
