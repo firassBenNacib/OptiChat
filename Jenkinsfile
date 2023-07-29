@@ -62,16 +62,16 @@ pipeline {
             steps {
                 script {
                     def imageName = "${APP_NAME}:${BUILD_NUMBER}"
-                    // Retrieve the Docker Hub password from the 'dockerhub-pwd' credential
+         
                     withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
-                        // Authenticate with Docker Hub
+                    
                         
                         sh "docker login -u firaskill12 -p ${dockerhubpwd}"
 
 
 
-                      sh "docker tag ${imageName} your_dockerhub_username/${imageName}"
-                    sh "docker push your_dockerhub_username/${imageName}"
+                      sh "docker tag ${imageName} firaskill12/${imageName}"
+                    sh "docker push firaskill12/${imageName}"
                     }
                 }
             }
@@ -80,15 +80,15 @@ pipeline {
        stage('Update Helm Chart') {
             steps {
                 script {
-                    // Clone the Helm chart repository
+            
                     dir('helm') {
                         git url: 'https://github.com/firassBenNacib/appfor-helm', branch: 'main'
                     }
 
-                    // Update the values.yaml file with the new Docker image tag
+                 
                     sh "sed -i 's|imageTag: .*|imageTag: ${BUILD_NUMBER}|' helm/values.yaml"
 
-                    // Commit and push the changes
+           
                     git add 'helm/values.yaml'
                     git commit -m 'Update Docker image tag'
                     git push
