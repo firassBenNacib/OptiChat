@@ -72,9 +72,8 @@ pipeline {
             }
         }
 
-          stage('Update Helm Chart') {
+     stage('Update Helm Chart') {
             steps {
-                // Move the dir('helm') block here to apply to the entire pipeline
                 dir('helm') {
                     // Clone the Helm chart repository to the 'helm' directory
                     git url: 'https://github.com/firassBenNacib/appfor-helm', branch: 'main'
@@ -93,9 +92,11 @@ pipeline {
                 sh 'cat values.yaml'
 
                 // Commit and push the changes
-                git add 'values.yaml'
-                git commit -m 'Update Docker image tag'
-                git push
+                script {
+                    git add 'values.yaml'
+                    git commit -m 'Update Docker image tag'
+                    git push
+                }
             }
         }
     }
