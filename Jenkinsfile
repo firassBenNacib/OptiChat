@@ -72,12 +72,12 @@ pipeline {
             }
         }
 
-      stage('Update Helm Chart') {
+        stage('Update Helm Chart') {
             steps {
                 script {
                     // Clone the Helm chart repository to the 'helm' directory
                     dir('helm') {
-                        git url: 'https://github.com/firassBenNacib/appfor-helm/tree/main/helm', branch: 'main'
+                        git url: 'https://github.com/firassBenNacib/appfor-helm', branch: 'main'
                     }
 
                     // Print the content of the 'helm' directory for debugging
