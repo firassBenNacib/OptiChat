@@ -72,35 +72,34 @@ pipeline {
             }
         }
 
-        stage('Update Helm Chart') {
+          stage('Update Helm Chart') {
             steps {
-                script {
+                // Move the dir('helm') block here to apply to the entire pipeline
+                dir('helm') {
                     // Clone the Helm chart repository to the 'helm' directory
-                    dir('helm') {
-                        git url: 'https://github.com/firassBenNacib/appfor-helm', branch: 'main'
-                    }
-
-                    // Print the content of the 'helm' directory for debugging
-                    sh 'ls -l'
-
-                    // Print the content of the 'values.yaml' file for debugging
-                    sh 'cat values.yaml'
-
-                    // Update the values.yaml file with the new Docker image tag
-                    sh "sed -i 's|imageTag: .*|imageTag: ${BUILD_NUMBER}|' values.yaml"
-
-                    // Print the updated 'values.yaml' file for debugging
-                    sh 'cat values.yaml'
-
-                    // Commit and push the changes
-                    git add 'values.yaml'
-                    git commit -m 'Update Docker image tag'
-                    git push
+                    git url: 'https://github.com/firassBenNacib/appfor-helm', branch: 'main'
                 }
+
+                // Print the content of the 'helm' directory for debugging
+                sh 'ls -l'
+
+                // Print the content of the 'values.yaml' file for debugging
+                sh 'cat values.yaml'
+
+                // Update the values.yaml file with the new Docker image tag
+                sh "sed -i 's|imageTag: .*|imageTag: ${BUILD_NUMBER}|' values.yaml"
+
+                // Print the updated 'values.yaml' file for debugging
+                sh 'cat values.yaml'
+
+                // Commit and push the changes
+                git add 'values.yaml'
+                git commit -m 'Update Docker image tag'
+                git push
             }
         }
     }
-
+    
     post {
         success {
             script {
