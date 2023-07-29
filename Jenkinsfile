@@ -72,7 +72,7 @@ pipeline {
             }
         }
 
-         stage('Update Helm Chart') {
+        stage('Update Helm Chart') {
             steps {
                 script {
                     // Clone the Helm chart repository to the 'helm' directory
@@ -81,7 +81,7 @@ pipeline {
                     }
 
                     // Print the content of the 'helm' directory for debugging
-                    sh 'ls -l helm'
+                    sh 'ls -l'
 
                     // Print the content of the 'values.yaml' file for debugging
                     sh 'cat values.yaml'
