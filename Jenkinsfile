@@ -5,6 +5,7 @@ pipeline {
     }
     environment {
         SCANNER_HOME = tool 'SonarScanner'
+        BUILD_NUMBER = "${env.BUILD_NUMBER}"
     }
   
     stages {
