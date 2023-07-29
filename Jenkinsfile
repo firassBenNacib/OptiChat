@@ -53,25 +53,24 @@ stage("Sonarqube Analysis") {
         stage('Build docker image') {
             steps {
                 script {
-                    sh 'docker build -t myappspring-prometheus:latest .'
+                    def imageName = "myappspring-prometheus:${BUILD_NUMBER}"
+                    sh "docker build -t ${imageName} ."
                 }
             }
         }
-        
+
         stage('Push image to Hub') {
             steps {
                 script {
+                    def imageName = "myappspring-prometheus:${BUILD_NUMBER}"
                     withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
-                        sh 'docker login -u firaskill12 -p ${dockerhubpwd}'
+                        sh "docker login -u firaskill12 -p ${dockerhubpwd}"
+                        sh "docker tag ${imageName} firaskill12/kube-keda:${BUILD_NUMBER}"
+                        sh "docker push firaskill12/kube-keda:${BUILD_NUMBER}"
                     }
-                    sh 'docker tag myappspring-prometheus:latest firaskill12/kube-keda:latest'
-                    sh 'docker push firaskill12/kube-keda:latest'
                 }
             }
         }
-
-
-}
  post {
         success {
             script {
