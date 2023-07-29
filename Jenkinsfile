@@ -5,73 +5,99 @@ pipeline {
     }
     environment {
         SCANNER_HOME = tool 'SonarScanner'
+         APP_NAME = 'kube-keda' 
+        BUILD_NUMBER = "${env.BUILD_NUMBER}"
     }
-  
+
     stages {
         stage('CheckOut') {
             steps {
                 checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/firassBenNacib/appfor']]])
-               
             }
         }
-        
+
         stage("Test Cases") {
             steps {
                 sh "mvn clean test jacoco:report"
             }
         }
-        
+
         stage("Package") {
             steps {
                 sh "mvn clean package"
             }
         }
-        
-stage("Sonarqube Analysis") {
-    steps {
-        withSonarQubeEnv('Sonar-Server') {
-            sh """
-            ${SCANNER_HOME}/bin/sonar-scanner \
-            -Dsonar.projectKey=forapp-project \
-            -Dsonar.projectName='forapp-project' \
-            -Dsonar.java.binaries=target/classes
-            """
-        }
-    }
-}
-   stage("Quality gate") {
+
+        stage("Sonarqube Analysis") {
             steps {
-                 timeout(time: 4, unit: 'MINUTES') {
-                waitForQualityGate abortPipeline: true
-			}
+                withSonarQubeEnv('Sonar-Server') {
+                    sh """
+                    ${SCANNER_HOME}/bin/sonar-scanner \
+                    -Dsonar.projectKey=forapp-project \
+                    -Dsonar.projectName='forapp-project' \
+                    -Dsonar.java.binaries=target/classes
+                    """
+                }
+            }
         }
-   }
 
+        stage("Quality gate") {
+            steps {
+                timeout(time: 4, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
 
-        
         stage('Build docker image') {
             steps {
                 script {
-                    sh 'docker build -t myappspring-prometheus:latest .'
+                      def imageName = "${APP_NAME}:${BUILD_NUMBER}"
+                    sh "docker build -t ${imageName} ."
                 }
             }
         }
-        
+
         stage('Push image to Hub') {
             steps {
                 script {
+                    def imageName = "${APP_NAME}:${BUILD_NUMBER}"
+                    // Retrieve the Docker Hub password from the 'dockerhub-pwd' credential
                     withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
-                        sh 'docker login -u firaskill12 -p ${dockerhubpwd}'
+                        // Authenticate with Docker Hub
+                        
+                        sh "docker login -u firaskill12 -p ${dockerhubpwd}"
+
+
+
+                      sh "docker tag ${imageName} your_dockerhub_username/${imageName}"
+                    sh "docker push your_dockerhub_username/${imageName}"
                     }
-                    sh 'docker tag myappspring-prometheus:latest firaskill12/kube-keda:latest'
-                    sh 'docker push firaskill12/kube-keda:latest'
                 }
             }
         }
 
+       stage('Update Helm Chart') {
+            steps {
+                script {
+                    // Clone the Helm chart repository
+                    dir('helm') {
+                        git url: 'https://github.com/firassBenNacib/appfor-helm', branch: 'main'
+                    }
 
-}
- post {
+                    // Update the values.yaml file with the new Docker image tag
+                    sh "sed -i 's|imageTag: .*|imageTag: ${BUILD_NUMBER}|' helm/values.yaml"
+
+                    // Commit and push the changes
+                    git add 'helm/values.yaml'
+                    git commit -m 'Update Docker image tag'
+                    git push
+                }
+            }
+        }
+    }
+
+    post {
         success {
             script {
                 slackSend(
@@ -80,9 +106,9 @@ stage("Sonarqube Analysis") {
                     channel: '#jenkins',
                     tokenCredentialId: 'Slack-Token'
                 )
-                emailext body: "Build successful!", 
-                         subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!", 
-                         to: "firas.bennacib@esprit.tn", 
+                emailext body: "Build successful!",
+                         subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!",
+                         to: "firas.bennacib@esprit.tn",
                          mimeType: 'text/plain'
             }
         }
@@ -94,9 +120,9 @@ stage("Sonarqube Analysis") {
                     channel: '#jenkins',
                     tokenCredentialId: 'Slack-Token'
                 )
-                emailext body: "Build failed!", 
-                         subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!", 
-                         to: "firas.bennacib@esprit.tn", 
+                emailext body: "Build failed!",
+                         subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!",
+                         to: "firas.bennacib@esprit.tn",
                          mimeType: 'text/plain'
             }
         }
