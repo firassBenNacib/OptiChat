@@ -5,14 +5,14 @@ pipeline {
     }
     environment {
         SCANNER_HOME = tool 'SonarScanner'
-         APP_NAME = 'kube-keda' 
+        APP_NAME = 'kube-keda'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
     }
 
     stages {
         stage('CheckOut') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/firassBenNacib/appfor']]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/firassBenNacib/appfor.git']]])
             }
         }
 
@@ -52,7 +52,7 @@ pipeline {
         stage('Build docker image') {
             steps {
                 script {
-                      def imageName = "${APP_NAME}:${BUILD_NUMBER}"
+                    def imageName = "${APP_NAME}:${BUILD_NUMBER}"
                     sh "docker build -t ${imageName} ."
                 }
             }
@@ -62,33 +62,28 @@ pipeline {
             steps {
                 script {
                     def imageName = "${APP_NAME}:${BUILD_NUMBER}"
-         
+
                     withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
-                    
-                        
                         sh "docker login -u firaskill12 -p ${dockerhubpwd}"
-
-
-
-                      sh "docker tag ${imageName} firaskill12/${imageName}"
-                    sh "docker push firaskill12/${imageName}"
+                        sh "docker tag ${imageName} firaskill12/${imageName}"
+                        sh "docker push firaskill12/${imageName}"
                     }
                 }
             }
         }
 
-       stage('Update Helm Chart') {
+        stage('Update Helm Chart') {
             steps {
                 script {
-            
+                    // Clone the Helm chart repository
                     dir('helm') {
                         git url: 'https://github.com/firassBenNacib/appfor-helm', branch: 'main'
                     }
 
-                 
+                    // Update the values.yaml file with the new Docker image tag
                     sh "sed -i 's|imageTag: .*|imageTag: ${BUILD_NUMBER}|' helm/values.yaml"
 
-           
+                    // Commit and push the changes
                     git add 'helm/values.yaml'
                     git commit -m 'Update Docker image tag'
                     git push
