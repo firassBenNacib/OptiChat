@@ -71,6 +71,7 @@ stage("Sonarqube Analysis") {
                 }
             }
         }
+    }
  post {
         success {
             script {
