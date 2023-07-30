@@ -115,7 +115,8 @@ pipeline {
                     sh "cat values.yaml"
                     
                     // Replace the placeholder with the build version in values.yaml
-                    sh "sed -i 's/{{ \\.Values\\.appVersion }}/${buildVersion}/g' values.yaml"
+                    sh "sed -i 's/{{ \\.Values\\.image\\.tag }}/295/g' values.yaml"
+
                     
                     // Debugging step: Display the content of values.yaml after the update
                     sh "cat values.yaml"
