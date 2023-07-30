@@ -50,10 +50,10 @@ pipeline {
             }
         }
 
-         stage('Build docker image') {
+          stage('Build docker image') {
             steps {
                 script {
-                    def appName = 'my-app-name' // Replace with your app name
+                    def appName = 'kube-keda' // Replace with your app name
                     def buildVersion = "${env.BUILD_NUMBER}"
                     def imageTag = "${appName}:${buildVersion}"
 
@@ -71,21 +71,21 @@ pipeline {
             }
         }
 
+        stage('Push image to Hub') {
+            steps {
+                script {
+                    def appName = 'kube-keda' // Replace with your app name
+                    def buildVersion = "${env.BUILD_NUMBER}"
+                    def imageTag = "${appName}:${buildVersion}"
 
-       stage('Push image to Hub') {
-    steps {
-        script {
-            def imageName = "${APP_NAME}:${BUILD_NUMBER}"
-
-            withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
-                sh "docker login -u firaskill12 -p ${dockerhubpwd}"
-                sh "docker tag ${imageName} firaskill12/${imageName}"
-                sh "docker push firaskill12/${imageName}"
+                    withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
+                        sh "docker login -u firaskill12 -p ${dockerhubpwd}"
+                        sh "docker tag ${imageTag} firaskill12/${imageTag}"
+                        sh "docker push firaskill12/${imageTag}"
+                    }
+                }
             }
         }
-    }
-}
-
 
           stage('Update Helm Chart') {
             steps {
