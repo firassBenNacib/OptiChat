@@ -99,7 +99,8 @@ stage('Update Chart') {
         GIT_REPO_URL = "github.com/firassBenNacib/appfor-helm.git"
     }
     steps {
-        withCredentials([usernamePassword(credentialsId: 'jenkins-github-token', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
+        withCredentials([string(credentialsId: 'GITHUB_USERNAME', variable: 'GITHUB_USERNAME'),
+                         string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
             // Clone the repository to the 'helm-repo' directory
             sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
@@ -122,6 +123,7 @@ stage('Update Chart') {
         }
     }
 }
+
 
 
     }
