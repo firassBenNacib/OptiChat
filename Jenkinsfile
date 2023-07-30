@@ -92,7 +92,7 @@ pipeline {
             script {
                 def appName = 'my-app-name' // Replace with your app name
                 def buildVersion = "${env.BUILD_NUMBER}"
-                def helmChartPath = './helm'  // Path to the helm chart directory relative to your Jenkins workspace
+                def helmChartPath = "${env.WORKSPACE}/helm" // Absolute path to the helm chart directory in Jenkins workspace
 
                 // Change working directory to helm chart directory
                 dir(helmChartPath) {
@@ -102,7 +102,9 @@ pipeline {
             }
         }
     }
-    }
+
+
+}
 
    post {
         success {
