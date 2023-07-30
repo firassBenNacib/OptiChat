@@ -88,49 +88,8 @@ pipeline {
                 }
             }
         }
-  stage('Update Helm Chart') {
-            steps {
-                script {
-                    // Check if the helm-repo directory exists
-                    def helmRepoDir = "helm-repo"
-                    def repoExists = fileExists(helmRepoDir)
-
-                    // Clone or pull the Helm chart repository based on its existence
-                    if (repoExists) {
-                        dir(helmRepoDir) {
-                            sh "git pull origin main"
-                        }
-                    } else {
-                        sh "git clone ${HELM_CHART_REPO} ${helmRepoDir}"
-                    }
-
-                    // Read the content of the values.yaml file
-                    def valuesFile = "${helmRepoDir}/${HELM_CHART_PATH}/values.yaml"
-                    def valuesContent = readFile(file: valuesFile)
-
-                    // Replace the tag in values.yaml with the build version
-                    def buildVersion = "${env.BUILD_NUMBER}"
-                    valuesContent = valuesContent.replaceAll(/\{\{\s*\.Values\.image\.tag\s*\}\}/, buildVersion)
-
-                    // Write the updated content back to values.yaml
-                    writeFile(file: valuesFile, text: valuesContent)
-
-                    // Commit the changes and push to the Git repository
-                    dir(helmRepoDir) {
-                        sh '''
-                            git config user.email "firas.bennacib@esprit.tn"
-                            git config user.name "firassBenNacib"
-                            git add values.yaml
-                            git commit -m "Update image tag to version ${buildVersion}"
-                            git push origin main
-                        '''
-                    }
-                }
-            }
-        }
     }
-
-
+ 
 
    post {
         success {
