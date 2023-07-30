@@ -3,11 +3,12 @@ pipeline {
     tools {
         maven 'Maven3'
     }
-    environment {
+     environment {
         SCANNER_HOME = tool 'SonarScanner'
         APP_NAME = 'kube-keda'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
-        HELM_CHART_PATH = 'helm' 
+        HELM_CHART_REPO = 'https://github.com/firassBenNacib/appfor-helm.git' // Replace with your Helm chart repository URL
+        HELM_CHART_PATH = 'helm' // Use 'helm' as the path to the Helm chart directory in the repository
     }
 
 
@@ -87,18 +88,25 @@ pipeline {
                 }
             }
         }
-stage('Update Helm Chart') {
+ stage('Update Helm Chart') {
         steps {
             script {
                 def appName = 'kube-keda' // Replace with your app name
                 def buildVersion = "${env.BUILD_NUMBER}"
+                def helmChartRepo = "${HELM_CHART_REPO}"
                 def helmChartPath = "${HELM_CHART_PATH}"
 
+                // Clone the Helm chart repository
+                sh "git clone ${helmChartRepo} helm-repo"
+
                 // Change working directory to the Helm chart directory
-                dir("${helmChartPath}") {
+                dir("helm-repo/${helmChartPath}") {
                     // Replace the placeholder with the build version in values.yaml
                     sh "sed -i 's/{{ .Values.appVersion }}/${buildVersion}/g' values.yaml"
                 }
+
+                // Commit and push the changes back to the repository (optional)
+      
             }
         }
     }
