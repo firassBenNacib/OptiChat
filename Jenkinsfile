@@ -52,26 +52,39 @@ pipeline {
             }
         }
 
-          stage('Build docker image') {
-            steps {
-                script {
-                    def appName = 'kube-keda' // Replace with your app name
-                    def buildVersion = "${env.BUILD_NUMBER}"
-                    def imageTag = "${appName}:${buildVersion}"
+       stage('Build docker image') {
+    steps {
+        script {
+            def appName = 'kube-keda' // Replace with your app name
+            def buildVersion = "${env.BUILD_NUMBER}"
+            def imageTag = "${appName}:${buildVersion}"
 
-                    // Check if the image with the same tag exists and remove it
-                    try {
-                        sh "docker image inspect ${imageTag}"
-                        sh "docker image rm ${imageTag}"
-                    } catch (Exception e) {
-                        echo "Image ${imageTag} does not exist. Skipping removal."
-                    }
+            // Get the previous build number
+            def previousBuildNumber = buildVersion.toInteger() - 1
+            def previousImageTag = "${appName}:${previousBuildNumber}"
 
-                    // Build the new image with the specified appname and build version
-                    sh "docker build -t ${imageTag} --build-arg APP_NAME=${appName} --build-arg BUILD_VERSION=${buildVersion} ."
-                }
+            // Check if the previous image tag exists and remove it
+            try {
+                sh "docker image inspect ${previousImageTag}"
+                sh "docker image rm ${previousImageTag}"
+            } catch (Exception e) {
+                echo "Image ${previousImageTag} does not exist. Skipping removal."
             }
+
+            // Check if the current image tag exists and remove it
+            try {
+                sh "docker image inspect ${imageTag}"
+                sh "docker image rm ${imageTag}"
+            } catch (Exception e) {
+                echo "Image ${imageTag} does not exist. Skipping removal."
+            }
+
+            // Build the new image with the specified appname and build version
+            sh "docker build -t ${imageTag} --build-arg APP_NAME=${appName} --build-arg BUILD_VERSION=${buildVersion} ."
         }
+    }
+}
+
 
         stage('Push image to Hub') {
             steps {
