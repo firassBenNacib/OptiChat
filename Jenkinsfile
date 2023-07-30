@@ -95,62 +95,23 @@ pipeline {
         }
 stage('Update Helm Chart') {
     environment {
-        HELM_CHART_REPO = "https://github.com/firassBenNacib/appfor-helm.git"
-        HELM_CHART_PATH = "helm"
+        GIT_REPO_NAME = "appfor-helm" // Update with your Git repository name
+        GIT_USER_NAME = "firassBenNacib" // Update with your Git username
     }
     steps {
-        script {
-            def buildVersion = "${env.BUILD_NUMBER}"
-            def helmRepoDir = "helm-repo"
-            def helmChartRepo = "${HELM_CHART_REPO}"
-            def helmChartPath = "${HELM_CHART_PATH}"
-
-            // Check if the helm-repo directory exists
-            def repoExists = fileExists(helmRepoDir)
-
-            // Clone or pull the Helm chart repository based on its existence
-            if (repoExists) {
-                dir(helmRepoDir) {
-                    sh "git pull origin main"
-                }
-            } else {
-                sh "git clone ${helmChartRepo} ${helmRepoDir}"
-            }
-
-            // Change working directory to the Helm chart directory
-            dir("${helmRepoDir}/${helmChartPath}") {
-                // Debugging step: Display the current working directory
-                sh "pwd"
-
-                // Debugging step: Display the content of the Helm chart directory
-                sh "ls -al"
-
-                // Replace the placeholder with the build version in values.yaml
-                sh "sed -i 's/tag: latest/tag: ${buildVersion}/g' values.yaml"
-
-                // Debugging step: Display the content of values.yaml after the update
-                sh "cat values.yaml"
-
-                // Check if there are any changes to commit
-                try {
-                    sh "git status"
-                } catch (Exception e) {
-                    echo "Error while checking git status."
-                }
-
-                // Commit and push the changes back to the repository
-                git branch: 'main', credentialsId: 'jenkins-github-token', url: 'https://github.com/firassBenNacib/appfor-helm.git'
-                sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
-                sh "git config --global user.name 'firassBenNacib'" // Set your name
-                sh "git add helm/values.yaml" // Use the correct relative path for values.yaml
-                sh "git commit -m 'Update values.yaml with build version ${buildVersion}'"
-                sh "git push origin main"
-            }
+        withCredentials([string(credentialsId: 'jenkins-github-token', variable: 'GITHUB_TOKEN')]) {
+            sh '''
+                git config user.email "firas.bennacib@esprit.tn" // Update with your email
+                git config user.name "firassBenNacib" // Update with your name
+                BUILD_NUMBER=${BUILD_NUMBER}
+                sed -i "s/tag: latest/tag: ${BUILD_NUMBER}/g" helm/values.yaml // Use the correct relative path for values.yaml
+                git add helm/values.yaml // Use the correct relative path for values.yaml
+                git commit -m "Update values.yaml with build version ${BUILD_NUMBER}"
+                git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+            '''
         }
     }
 }
-
-
     }
 
    post {
