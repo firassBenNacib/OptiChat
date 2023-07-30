@@ -88,7 +88,7 @@ pipeline {
                 }
             }
         }
- stage('Update Helm Chart') {
+  stage('Update Helm Chart') {
         steps {
             script {
                 def appName = 'kube-keda' // Replace with your app name
@@ -96,17 +96,27 @@ pipeline {
                 def helmChartRepo = "${HELM_CHART_REPO}"
                 def helmChartPath = "${HELM_CHART_PATH}"
 
-                // Clone the Helm chart repository
-                sh "git clone ${helmChartRepo} helm-repo"
+                // Check if the helm-repo directory exists
+                def helmRepoDir = "helm-repo"
+                def repoExists = fileExists(helmRepoDir)
+
+                // Clone or pull the Helm chart repository based on its existence
+                if (repoExists) {
+                    dir(helmRepoDir) {
+                        sh "git pull origin main"
+                    }
+                } else {
+                    sh "git clone ${helmChartRepo} ${helmRepoDir}"
+                }
 
                 // Change working directory to the Helm chart directory
-                dir("helm-repo/${helmChartPath}") {
+                dir("${helmRepoDir}/${helmChartPath}") {
                     // Replace the placeholder with the build version in values.yaml
                     sh "sed -i 's/{{ .Values.appVersion }}/${buildVersion}/g' values.yaml"
                 }
 
                 // Commit and push the changes back to the repository
-                dir("helm-repo") {
+                dir(helmRepoDir) {
                     sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
                     sh "git config --global user.name 'firassBenNacib'" // Set your name
                     sh "git add ${helmChartPath}/values.yaml"
@@ -116,6 +126,7 @@ pipeline {
             }
         }
     }
+
     // ... Rest of the pipeline ...
 }
 
