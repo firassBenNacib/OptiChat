@@ -87,24 +87,22 @@ pipeline {
             }
         }
 
-     stage('Update Helm Chart') {
+    stage('Update Helm Chart') {
         steps {
             script {
                 def appName = 'my-app-name' // Replace with your app name
                 def buildVersion = "${env.BUILD_NUMBER}"
                 def helmChartPath = "${env.WORKSPACE}/helm" // Absolute path to the helm chart directory in Jenkins workspace
 
-                // Change working directory to helm chart directory
-                dir(helmChartPath) {
+                // Change working directory to 'update' directory inside 'helm'
+                dir("${helmChartPath}/update") {
                     // Replace the placeholder with the build version in values.yaml
                     sh "sed -i 's/{{ .Values.appVersion }}/${buildVersion}/g' values.yaml"
                 }
             }
         }
     }
-
-
-}
+    }
 
    post {
         success {
