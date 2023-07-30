@@ -93,7 +93,7 @@ pipeline {
                 }
             }
         }
- stage('Update Helm Chart') {
+stage('Update Helm Chart') {
     steps {
         script {
             def appName = 'kube-keda' // Replace with your app name
@@ -126,7 +126,7 @@ pipeline {
                 sh "cat values.yaml"
 
                 // Commit and push the changes back to the repository
-                  git credentialsId: 'jenkins-github-token', url: 'https://github.com/firassBenNacib/appfor-helm.git'
+                git branch: 'main', credentialsId: 'jenkins-github-token', url: 'https://github.com/firassBenNacib/appfor-helm.git'
                 sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
                 sh "git config --global user.name 'firassBenNacib'" // Set your name
                 sh "git add values.yaml" // Use the correct path for values.yaml
