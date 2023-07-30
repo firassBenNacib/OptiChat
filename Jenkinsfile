@@ -93,51 +93,48 @@ pipeline {
                 }
             }
         }
-  stage('Update Helm Chart') {
-            steps {
-                script {
-                    def appName = 'kube-keda' // Replace with your app name
-                    def buildVersion = "${env.BUILD_NUMBER}"
-                    def helmChartRepo = "${HELM_CHART_REPO}"
-                    def helmChartPath = "${HELM_CHART_PATH}"
+ stage('Update Helm Chart') {
+    steps {
+        script {
+            def appName = 'kube-keda' // Replace with your app name
+            def buildVersion = "${env.BUILD_NUMBER}"
+            def helmChartRepo = "${HELM_CHART_REPO}"
+            def helmChartPath = "${HELM_CHART_PATH}"
 
-                    // Check if the helm-repo directory exists
-                    def helmRepoDir = "helm-repo"
-                    def repoExists = fileExists(helmRepoDir)
+            // Check if the helm-repo directory exists
+            def helmRepoDir = "helm-repo"
+            def repoExists = fileExists(helmRepoDir)
 
-                    // Clone or pull the Helm chart repository based on its existence
-                    if (repoExists) {
-                        dir(helmRepoDir) {
-                            sh "git pull origin main"
-                        }
-                    } else {
-                        sh "git clone ${helmChartRepo} ${helmRepoDir}"
-                    }
-
-                    // Change working directory to the Helm chart directory
-                    dir("${helmRepoDir}/${helmChartPath}") {
-                        // Debugging step: Display the content of values.yaml before the update
-                        sh "cat values.yaml"
-
-                        // Replace the placeholder with the build version in values.yaml
-                        sh "sed -i 's/tag: latest/tag: ${buildVersion}/g' values.yaml"
-
-                        // Debugging step: Display the content of values.yaml after the update
-                        sh "cat values.yaml"
-                    }
-
-    
-                        dir(helmRepoDir) {
-                            sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
-                            sh "git config --global user.name 'firassBenNacib'" // Set your name
-                            sh "git add ${helmChartPath}/values.yaml"
-                            sh "git commit -m 'Update values.yaml with build version ${buildVersion}'"
-                            sh "git push origin main"
-                        }
-                    
+            // Clone or pull the Helm chart repository based on its existence
+            if (repoExists) {
+                dir(helmRepoDir) {
+                    sh "git pull origin main"
                 }
+            } else {
+                sh "git clone ${helmChartRepo} ${helmRepoDir}"
+            }
+
+            // Change working directory to the Helm chart directory
+            dir("${helmRepoDir}/${helmChartPath}") {
+                // Debugging step: Display the content of values.yaml before the update
+                sh "cat values.yaml"
+
+                // Replace the placeholder with the build version in values.yaml
+                sh "sed -i 's/tag: latest/tag: ${buildVersion}/g' values.yaml"
+
+                // Debugging step: Display the content of values.yaml after the update
+                sh "cat values.yaml"
+
+                // Commit and push the changes back to the repository
+                sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
+                sh "git config --global user.name 'firassBenNacib'" // Set your name
+                sh "git add ${helmChartPath}/values.yaml"
+                sh "git commit -m 'Update values.yaml with build version ${buildVersion}'"
+                sh "git push origin main"
             }
         }
+    }
+}
     }
 
 
