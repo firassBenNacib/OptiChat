@@ -108,7 +108,7 @@ pipeline {
                 // Commit and push the changes back to the repository
                 dir("helm-repo") {
                     sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
-                    sh "git config --global user.name 'firassbennacib'" // Set your name
+                    sh "git config --global user.name 'firassBenNacib'" // Set your name
                     sh "git add ${helmChartPath}/values.yaml"
                     sh "git commit -m 'Update values.yaml with build version ${buildVersion}'"
                     sh "git push origin main"
