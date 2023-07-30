@@ -116,8 +116,8 @@ stage('Update Helm Chart') {
 
             // Change working directory to the Helm chart directory
             dir("${helmRepoDir}/${helmChartPath}") {
-                // Debugging step: Display the content of values.yaml before the update
-                sh "cat values.yaml"
+                // Debugging step: Display the content of the Helm chart directory
+                sh "ls -al"
 
                 // Replace the placeholder with the build version in values.yaml
                 sh "sed -i 's/tag: latest/tag: ${buildVersion}/g' values.yaml"
@@ -129,13 +129,14 @@ stage('Update Helm Chart') {
                 git branch: 'main', credentialsId: 'jenkins-github-token', url: 'https://github.com/firassBenNacib/appfor-helm.git'
                 sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
                 sh "git config --global user.name 'firassBenNacib'" // Set your name
-                sh "git add values.yaml" // Use the correct path for values.yaml
+                sh "git add ." // Add all changed files
                 sh "git commit -m 'Update values.yaml with build version ${buildVersion}'"
                 sh "git push origin main"
             }
         }
     }
 }
+
     }
 
 
