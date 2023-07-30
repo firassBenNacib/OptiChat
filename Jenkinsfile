@@ -88,7 +88,7 @@ pipeline {
                 }
             }
         }
-  stage('Update Helm Chart') {
+   stage('Update Helm Chart') {
         steps {
             script {
                 def appName = 'kube-keda' // Replace with your app name
@@ -111,8 +111,14 @@ pipeline {
 
                 // Change working directory to the Helm chart directory
                 dir("${helmRepoDir}/${helmChartPath}") {
+                    // Debugging step: Display the content of values.yaml before the update
+                    sh "cat values.yaml"
+                    
                     // Replace the placeholder with the build version in values.yaml
                     sh "sed -i 's/{{ .Values.appVersion }}/${buildVersion}/g' values.yaml"
+                    
+                    // Debugging step: Display the content of values.yaml after the update
+                    sh "cat values.yaml"
                 }
 
                 // Commit and push the changes back to the repository
