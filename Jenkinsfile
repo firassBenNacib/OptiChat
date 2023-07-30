@@ -93,25 +93,35 @@ pipeline {
                 }
             }
         }
-stage('Update Helm Chart') {
+stage('Update Chart') {
     environment {
-        GIT_REPO_NAME = "appfor-helm" // Update with your Git repository name
-        GIT_USER_NAME = "firassBenNacib" // Update with your Git username
+        GIT_USER_NAME = "firassBenNacib"
     }
     steps {
-        withCredentials([string(credentialsId: 'jenkins-github-token', variable: 'GITHUB_TOKEN')]) {
-            sh '''
-                git config user.email "firas.bennacib@esprit.tn" // Update with your email
-                git config user.name "firassBenNacib" // Update with your name
-                BUILD_NUMBER=${BUILD_NUMBER}
-                sed -i "s/tag: latest/tag: ${BUILD_NUMBER}/g" helm/values.yaml // Use the correct relative path for values.yaml
-                git add helm/values.yaml // Use the correct relative path for values.yaml
-                git commit -m "Update values.yaml with build version ${BUILD_NUMBER}"
-                git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-            '''
+        // Clone the repository to the 'helm-repo' directory
+        sh 'git clone https://github.com/firassBenNacib/appfor-helm.git helm-repo'
+
+        dir('helm-repo/helm') {
+            // Update the values.yaml file
+            sh 'sed -i "s/tag: latest/tag: 331/g" values.yaml'
+
+            // Check the git status
+            sh 'git status'
+
+            // Commit the changes
+            sh 'git config user.email "firas.bennacib@esprit.tn"'
+            sh "git config user.name ${GIT_USER_NAME}"
+            sh 'git add values.yaml'
+            sh 'git commit -m "Update values.yaml with build version 331"'
+
+            // Push the changes back to the repository
+            withCredentials([usernamePassword(credentialsId: 'jenkins-github-token', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
+                sh "git push https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/firassBenNacib/appfor-helm.git HEAD:main"
+            }
         }
     }
 }
+
     }
 
    post {
