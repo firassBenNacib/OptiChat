@@ -92,6 +92,7 @@ pipeline {
                     }
                 }
             }
+        }
     stage('Update Chart') {
         environment {
             GIT_USER_NAME = "firassBenNacib"
@@ -129,7 +130,7 @@ pipeline {
 
 
 }
-    }
+    
 
    post {
         success {
