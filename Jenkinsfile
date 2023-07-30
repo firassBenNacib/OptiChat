@@ -72,19 +72,20 @@ pipeline {
         }
 
 
-        stage('Push image to Hub') {
-            steps {
-                script {
-                    def imageName = "${APP_NAME}:${BUILD_NUMBER}"
+       stage('Push image to Hub') {
+    steps {
+        script {
+            def imageName = "${APP_NAME}:${BUILD_NUMBER}"
 
-                    withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
-                        sh "docker login -u firaskill12 -p ${dockerhubpwd}"
-                        sh "docker tag ${imageName} firaskill12/${imageName}"
-                        sh "docker push firaskill12/${imageName}"
-                    }
-                }
+            withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
+                sh "docker login -u firaskill12 -p ${dockerhubpwd}"
+                sh "docker tag ${imageName} firaskill12/${imageName}"
+                sh "docker push firaskill12/${imageName}"
             }
         }
+    }
+}
+
 
           stage('Update Helm Chart') {
             steps {
