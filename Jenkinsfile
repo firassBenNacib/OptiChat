@@ -104,8 +104,11 @@ stage('Update Chart') {
             sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
             dir('helm-repo/helm') {
-                // Update the values.yaml file
-                sh 'sed -i "s/tag: 338/tag: latest/g" values.yaml'
+                // Read the current tag value from the values.yaml file
+                def currentTag = sh(script: "grep -oP '(?<=tag: ).*' values.yaml", returnStdout: true).trim()
+
+                // Update the values.yaml file with the latest build version
+                sh "sed -i 's/tag: ${currentTag}/tag: 338/g' values.yaml"
 
                 // Check the git status
                 sh 'git status'
@@ -114,7 +117,7 @@ stage('Update Chart') {
                 sh 'git config user.email "firas.bennacib@esprit.tn"'
                 sh "git config user.name $GIT_USER_NAME"
                 sh 'git add values.yaml'
-                sh 'git commit -m "Update values.yaml with build version latest"'
+                sh 'git commit -m "Update values.yaml with build version 338"'
 
                 // Push the changes back to the repository
                 sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
@@ -122,6 +125,7 @@ stage('Update Chart') {
         }
     }
 }
+
 
 
 
