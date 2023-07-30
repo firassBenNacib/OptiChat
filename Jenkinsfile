@@ -88,25 +88,38 @@ pipeline {
                 }
             }
         }
- stage('Update Helm Chart') {
-            environment {
-                GIT_REPO_NAME = "appfor-helm"
-                GIT_USER_NAME = "firassBenNacib"
-            }
+  stage('Update Helm Chart') {
             steps {
                 script {
-                    def appName = 'kube-keda' // Replace with your app name
-                    def buildVersion = "${env.BUILD_NUMBER}"
-                    echo "Build Version: ${buildVersion}" // Add this line to check the value
+                    // Check if the helm-repo directory exists
+                    def helmRepoDir = "helm-repo"
+                    def repoExists = fileExists(helmRepoDir)
+
+                    // Clone or pull the Helm chart repository based on its existence
+                    if (repoExists) {
+                        dir(helmRepoDir) {
+                            sh "git pull origin main"
+                        }
+                    } else {
+                        sh "git clone ${HELM_CHART_REPO} ${helmRepoDir}"
+                    }
+
+                    // Read the content of the values.yaml file
+                    def valuesFile = "${helmRepoDir}/${HELM_CHART_PATH}/values.yaml"
+                    def valuesContent = readFile(file: valuesFile)
 
                     // Replace the tag in values.yaml with the build version
-                    sh "sed -i 's/{{ \\.Values\\.image\\.tag }}/${buildVersion}/g' helm-repo/values.yaml"
+                    def buildVersion = "${env.BUILD_NUMBER}"
+                    valuesContent = valuesContent.replaceAll(/\{\{\s*\.Values\.image\.tag\s*\}\}/, buildVersion)
+
+                    // Write the updated content back to values.yaml
+                    writeFile(file: valuesFile, text: valuesContent)
 
                     // Commit the changes and push to the Git repository
                     sh '''
-                        cd helm-repo
-                        git config user.email "firas.bennacib@esprit.tn"
-                        git config user.name "firassBenNacib"
+                        cd ${helmRepoDir}
+                        git config user.email "youremail@example.com"
+                        git config user.name "Your Name"
                         git add values.yaml
                         git commit -m "Update image tag to version ${buildVersion}"
                         git push origin main
