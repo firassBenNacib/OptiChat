@@ -7,8 +7,8 @@ pipeline {
         SCANNER_HOME = tool 'SonarScanner'
         APP_NAME = 'kube-keda'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
-        HELM_CHART_REPO = 'https://github.com/firassBenNacib/appfor-helm.git' // Replace with your Helm chart repository URL
-        HELM_CHART_PATH = 'helm' // Use 'helm' as the path to the Helm chart directory in the repository
+        HELM_CHART_REPO = 'https://github.com/firassBenNacib/appfor-helm.git' 
+        HELM_CHART_PATH = 'helm'
     }
 
 
@@ -55,15 +55,15 @@ pipeline {
       stage('Build docker image') {
     steps {
         script {
-            def appName = 'kube-keda' // Replace with your app name
+            def appName = 'kube-keda' 
             def buildVersion = "${env.BUILD_NUMBER}"
             def imageTag = "${appName}:${buildVersion}"
 
-            // Get the previous build number
+
             def previousBuildNumber = buildVersion.toInteger() - 1
             def previousImageTag = "${appName}:${previousBuildNumber}"
 
-            // Check if the previous image tag exists and remove it
+  
             try {
                 sh "docker image inspect ${previousImageTag}"
                 sh "docker image rm ${previousImageTag}"
@@ -71,7 +71,6 @@ pipeline {
                 echo "Image ${previousImageTag} does not exist. Skipping removal."
             }
 
-            // Build the new image with the specified appname and build version
             sh "docker build -t ${imageTag} --build-arg APP_NAME=${appName} --build-arg BUILD_VERSION=${buildVersion} ."
         }
     }
@@ -82,7 +81,7 @@ pipeline {
         stage('Push image to Hub') {
             steps {
                 script {
-                    def appName = 'kube-keda' // Replace with your app name
+                    def appName = 'kube-keda' 
                     def buildVersion = "${env.BUILD_NUMBER}"
                     def imageTag = "${appName}:${buildVersion}"
 
@@ -94,8 +93,6 @@ pipeline {
                 }
             }
         }
-<<<<<<< HEAD
-=======
        stage('Update Helm Chart') {
         steps {
             script {
@@ -145,7 +142,6 @@ pipeline {
                 }
             }
         }
->>>>>>> parent of 1f82f5d (Update Jenkinsfile)
     }
  
 
