@@ -7,8 +7,9 @@ pipeline {
         SCANNER_HOME = tool 'SonarScanner'
         APP_NAME = 'kube-keda'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
-        HELM_CHART_PATH = './path/to/helm/chart' // Replace with the actual path to your Helm chart
+        HELM_CHART_PATH = 'helm' 
     }
+
 
     stages {
         stage('CheckOut') {
@@ -86,23 +87,24 @@ pipeline {
                 }
             }
         }
-
-    stage('Update Helm Chart') {
+stage('Update Helm Chart') {
         steps {
             script {
-                def appName = 'my-app-name' // Replace with your app name
+                def appName = 'kube-keda' // Replace with your app name
                 def buildVersion = "${env.BUILD_NUMBER}"
-                def helmChartPath = "${env.WORKSPACE}/helm" // Absolute path to the helm chart directory in Jenkins workspace
+                def helmChartPath = "${HELM_CHART_PATH}"
 
-                // Change working directory to 'update' directory inside 'helm'
-                dir("${helmChartPath}/update") {
+                // Change working directory to the Helm chart directory
+                dir("${helmChartPath}") {
                     // Replace the placeholder with the build version in values.yaml
                     sh "sed -i 's/{{ .Values.appVersion }}/${buildVersion}/g' values.yaml"
                 }
             }
         }
     }
-    }
+
+    // ... Rest of the pipeline ...
+}
 
    post {
         success {
