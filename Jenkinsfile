@@ -106,7 +106,7 @@ stage('Update Chart') {
 
             dir('helm-repo/helm') {
                 // Update the values.yaml file
-                sh 'sed -i "s/tag: latest/tag: 338/g" values.yaml'
+                sh 'sed -i "s/tag: latest/tag: latest/g" values.yaml'
 
                 // Check the git status
                 sh 'git status'
