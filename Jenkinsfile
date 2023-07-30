@@ -7,8 +7,7 @@ pipeline {
         SCANNER_HOME = tool 'SonarScanner'
         APP_NAME = 'kube-keda'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
-        HELM_CHART_REPO = 'https://github.com/firassBenNacib/appfor-helm.git' 
-        HELM_CHART_PATH = 'helm'
+       
     }
 
 
