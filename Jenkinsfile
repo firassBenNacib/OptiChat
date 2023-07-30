@@ -105,11 +105,11 @@ pipeline {
             sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
             dir('helm-repo/helm') {
-                // Update the values.yaml file
-                sh 'sed -i "s/tag: 338/tag: $BUILD_NUMBER/g" values.yaml'
+               // Get the current tag from values.yaml
+                def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
 
-                // Check the git status
-                sh 'git status'
+                // Update the values.yaml file with the current tag
+                sh "sed -i 's/tag: ${currentTag}/tag: ${BUILD_NUMBER}/g' values.yaml"
 
                 // Commit the changes
                 sh 'git config user.email "firas.bennacib@esprit.tn"'
