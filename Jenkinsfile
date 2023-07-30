@@ -7,6 +7,7 @@ pipeline {
         SCANNER_HOME = tool 'SonarScanner'
         APP_NAME = 'kube-keda'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
+        CURRENT_TAG = sh(script: "grep -oP '(?<=tag: ).*' helm-repo/helm/values.yaml", returnStdout: true).trim()
        
     }
 
@@ -92,11 +93,10 @@ pipeline {
                 }
             }
         }
-  stage('Update Chart') {
+   stage('Update Chart') {
         environment {
             GIT_USER_NAME = "firassBenNacib"
             GIT_REPO_URL = "github.com/firassBenNacib/appfor-helm.git"
-            CURRENT_TAG = sh(script: "awk '/tag:/{print \$2}' helm-repo/helm/values.yaml", returnStdout: true).trim()
         }
         steps {
             withCredentials([string(credentialsId: 'GITHUB_USERNAME', variable: 'GITHUB_USERNAME'),
