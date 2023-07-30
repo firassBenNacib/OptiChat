@@ -7,7 +7,7 @@ pipeline {
         SCANNER_HOME = tool 'SonarScanner'
         APP_NAME = 'kube-keda'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
-        CURRENT_TAG = sh(script: "grep -oP '(?<=tag: ).*' helm-repo/helm/values.yaml", returnStdout: true).trim()
+    
        
     }
 
@@ -93,7 +93,7 @@ pipeline {
                 }
             }
         }
-   stage('Update Chart') {
+    stage('Update Chart') {
         environment {
             GIT_USER_NAME = "firassBenNacib"
             GIT_REPO_URL = "github.com/firassBenNacib/appfor-helm.git"
@@ -105,6 +105,9 @@ pipeline {
                 sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
                 dir('helm-repo/helm') {
+                    // Extract the current tag from values.yaml
+                    sh "CURRENT_TAG=$(grep -o 'tag: .*' values.yaml | cut -d ' ' -f 2)"
+                    
                     // Update the values.yaml file with the latest build version
                     sh "sed -i 's/tag: ${CURRENT_TAG}/tag: latest/g' values.yaml"
 
@@ -125,8 +128,7 @@ pipeline {
     }
 
 
-
-    }
+}
 
    post {
         success {
