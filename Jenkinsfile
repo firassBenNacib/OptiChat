@@ -96,12 +96,12 @@ pipeline {
 stage('Update Chart') {
     environment {
         GIT_USER_NAME = "firassBenNacib"
-        GIT_REPO_URL = "https://github.com/firassBenNacib/appfor-helm.git"
+        GIT_REPO_URL = "github.com/firassBenNacib/appfor-helm.git"
     }
     steps {
         withCredentials([usernamePassword(credentialsId: 'jenkins-github-token', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
             // Clone the repository to the 'helm-repo' directory
-            sh 'git clone $GIT_REPO_URL helm-repo'
+            sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
             dir('helm-repo/helm') {
                 // Update the values.yaml file
@@ -122,7 +122,6 @@ stage('Update Chart') {
         }
     }
 }
-
 
 
     }
