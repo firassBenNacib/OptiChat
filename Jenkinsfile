@@ -96,31 +96,33 @@ pipeline {
 stage('Update Chart') {
     environment {
         GIT_USER_NAME = "firassBenNacib"
+        GIT_REPO_URL = "https://github.com/firassBenNacib/appfor-helm.git"
     }
     steps {
         withCredentials([usernamePassword(credentialsId: 'jenkins-github-token', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
             // Clone the repository to the 'helm-repo' directory
-            sh 'git clone https://github.com/firassBenNacib/appfor-helm.git helm-repo'
+            sh 'git clone $GIT_REPO_URL helm-repo'
 
             dir('helm-repo/helm') {
                 // Update the values.yaml file
-                sh 'sed -i "s/tag: latest/tag: 331/g" values.yaml'
+                sh 'sed -i "s/tag: latest/tag: 338/g" values.yaml'
 
                 // Check the git status
                 sh 'git status'
 
                 // Commit the changes
                 sh 'git config user.email "firas.bennacib@esprit.tn"'
-                sh "git config user.name ${GIT_USER_NAME}"
+                sh "git config user.name $GIT_USER_NAME"
                 sh 'git add values.yaml'
-                sh 'git commit -m "Update values.yaml with build version 331"'
+                sh 'git commit -m "Update values.yaml with build version 338"'
 
                 // Push the changes back to the repository
-                sh "git push https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/firassBenNacib/appfor-helm.git HEAD:main"
+                sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
             }
         }
     }
 }
+
 
 
     }
