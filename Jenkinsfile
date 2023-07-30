@@ -96,6 +96,8 @@ pipeline {
 stage('Update Chart') {
     environment {
         GIT_USER_NAME = "firassBenNacib"
+        GITHUB_USERNAME = credentials('jenkins-github-token').username
+        GITHUB_TOKEN = credentials('jenkins-github-token').password
     }
     steps {
         // Clone the repository to the 'helm-repo' directory
@@ -115,9 +117,7 @@ stage('Update Chart') {
             sh 'git commit -m "Update values.yaml with build version 331"'
 
             // Push the changes back to the repository
-            withCredentials([usernamePassword(credentialsId: 'jenkins-github-token', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
-                sh "git push https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/firassBenNacib/appfor-helm.git HEAD:main"
-            }
+            sh "git push https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/firassBenNacib/appfor-helm.git HEAD:main"
         }
     }
 }
