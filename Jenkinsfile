@@ -106,7 +106,7 @@ stage('Update Chart') {
 
             dir('helm-repo/helm') {
                 // Update the values.yaml file
-                sh 'sed -i "s/tag: latest/tag: latest/g" values.yaml'
+                sh 'sed -i "s/tag: 338/tag: latest/g" values.yaml'
 
                 // Check the git status
                 sh 'git status'
@@ -115,7 +115,7 @@ stage('Update Chart') {
                 sh 'git config user.email "firas.bennacib@esprit.tn"'
                 sh "git config user.name $GIT_USER_NAME"
                 sh 'git add values.yaml'
-                sh 'git commit -m "Update values.yaml with build version 338"'
+                sh 'git commit -m "Update values.yaml with build version latest"'
 
                 // Push the changes back to the repository
                 sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
