@@ -88,7 +88,7 @@ pipeline {
                 }
             }
         }
-   stage('Update Helm Chart') {
+       stage('Update Helm Chart') {
         steps {
             script {
                 def appName = 'kube-keda' // Replace with your app name
@@ -115,19 +115,25 @@ pipeline {
                     sh "cat values.yaml"
                     
                     // Replace the placeholder with the build version in values.yaml
-                    sh "sed -i 's/{{ .Values.appVersion }}/${buildVersion}/g' values.yaml"
+                    sh "sed -i 's/{{ \\.Values\\.appVersion }}/${buildVersion}/g' values.yaml"
                     
                     // Debugging step: Display the content of values.yaml after the update
                     sh "cat values.yaml"
                 }
 
-                // Commit and push the changes back to the repository
-                dir(helmRepoDir) {
-                    sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
-                    sh "git config --global user.name 'firassBenNacib'" // Set your name
-                    sh "git add ${helmChartPath}/values.yaml"
-                    sh "git commit -m 'Update values.yaml with build version ${buildVersion}'"
-                    sh "git push origin main"
+                // Check for changes in the Helm chart directory after the sed command
+                def changesExist = sh(script: "git diff --exit-code", returnStatus: true)
+                echo "Changes Exist: ${changesExist}"
+
+                // Commit and push the changes back to the repository if there are any changes
+                if (changesExist != 0) {
+                    dir(helmRepoDir) {
+                        sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
+                        sh "git config --global user.name 'firassBenNacib'" // Set your name
+                        sh "git add ${helmChartPath}/values.yaml"
+                        sh "git commit -m 'Update values.yaml with build version ${buildVersion}'"
+                        sh "git push origin main"
+                    }
                 }
             }
         }
