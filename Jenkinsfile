@@ -92,11 +92,11 @@ pipeline {
                 }
             }
         }
- stage('Update Chart') {
+  stage('Update Chart') {
         environment {
             GIT_USER_NAME = "firassBenNacib"
             GIT_REPO_URL = "github.com/firassBenNacib/appfor-helm.git"
-            CURRENT_TAG = sh(script: "awk '/tag:/{print $2}' helm-repo/helm/values.yaml", returnStdout: true).trim()
+            CURRENT_TAG = sh(script: "awk '/tag:/{print \$2}' helm-repo/helm/values.yaml", returnStdout: true).trim()
         }
         steps {
             withCredentials([string(credentialsId: 'GITHUB_USERNAME', variable: 'GITHUB_USERNAME'),
@@ -113,7 +113,7 @@ pipeline {
 
                     // Commit the changes
                     sh 'git config user.email "firas.bennacib@esprit.tn"'
-                    sh "git config user.name $GIT_USER_NAME"
+                    sh "git config user.name ${GIT_USER_NAME}"
                     sh 'git add values.yaml'
                     sh 'git commit -m "Update values.yaml with build version latest"'
 
@@ -123,7 +123,6 @@ pipeline {
             }
         }
     }
-
 
 
 
