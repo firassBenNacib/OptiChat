@@ -94,15 +94,18 @@ pipeline {
             }
         }
 stage('Update Helm Chart') {
+    environment {
+        HELM_CHART_REPO = "https://github.com/firassBenNacib/appfor-helm.git"
+        HELM_CHART_PATH = "helm"
+    }
     steps {
         script {
-            def appName = 'kube-keda' // Replace with your app name
             def buildVersion = "${env.BUILD_NUMBER}"
+            def helmRepoDir = "helm-repo"
             def helmChartRepo = "${HELM_CHART_REPO}"
             def helmChartPath = "${HELM_CHART_PATH}"
 
             // Check if the helm-repo directory exists
-            def helmRepoDir = "helm-repo"
             def repoExists = fileExists(helmRepoDir)
 
             // Clone or pull the Helm chart repository based on its existence
