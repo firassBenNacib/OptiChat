@@ -92,7 +92,6 @@ pipeline {
                     }
                 }
             }
-        }
     stage('Update Chart') {
         environment {
             GIT_USER_NAME = "firassBenNacib"
@@ -106,10 +105,10 @@ pipeline {
 
                 dir('helm-repo/helm') {
                     // Extract the current tag from values.yaml
-                    sh "CURRENT_TAG=$(grep -o 'tag: .*' values.yaml | cut -d ' ' -f 2)"
+                    def currentTag = sh(script: "grep -o 'tag: .*' values.yaml | cut -d ' ' -f 2", returnStdout: true).trim()
                     
                     // Update the values.yaml file with the latest build version
-                    sh "sed -i 's/tag: ${CURRENT_TAG}/tag: latest/g' values.yaml"
+                    sh "sed -i 's/tag: ${currentTag}/tag: latest/g' values.yaml"
 
                     // Check the git status
                     sh 'git status'
@@ -128,7 +127,9 @@ pipeline {
     }
 
 
+
 }
+    }
 
    post {
         success {
