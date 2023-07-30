@@ -139,13 +139,14 @@ stage('Update Helm Chart') {
                 git branch: 'main', credentialsId: 'jenkins-github-token', url: 'https://github.com/firassBenNacib/appfor-helm.git'
                 sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
                 sh "git config --global user.name 'firassBenNacib'" // Set your name
-                sh "git add ${helmChartPath}/values.yaml" // Use the correct absolute path for values.yaml
+                sh "git add values.yaml" // Use the correct relative path for values.yaml
                 sh "git commit -m 'Update values.yaml with build version ${buildVersion}'"
                 sh "git push origin main"
             }
         }
     }
 }
+
 
     }
 
