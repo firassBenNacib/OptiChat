@@ -88,61 +88,32 @@ pipeline {
                 }
             }
         }
-   stage('Update Helm Chart') {
-    steps {
-        script {
-            def appName = 'kube-keda' // Replace with your app name
-            def buildVersion = "${env.BUILD_NUMBER}"
-            def helmChartRepo = "${HELM_CHART_REPO}"
-            def helmChartPath = "${HELM_CHART_PATH}"
-
-            // Check if the helm-repo directory exists
-            def helmRepoDir = "helm-repo"
-            def repoExists = fileExists(helmRepoDir)
-
-            // Clone or pull the Helm chart repository based on its existence
-            if (repoExists) {
-                dir(helmRepoDir) {
-                    sh "git pull origin main"
-                }
-            } else {
-                sh "git clone ${helmChartRepo} ${helmRepoDir}"
+ stage('Update Helm Chart') {
+            environment {
+                GIT_REPO_NAME = "appfor-helm"
+                GIT_USER_NAME = "firassBenNacib"
             }
+            steps {
+                script {
+                    def appName = 'kube-keda' // Replace with your app name
+                    def buildVersion = "${env.BUILD_NUMBER}"
+                    echo "Build Version: ${buildVersion}" // Add this line to check the value
 
-            // Read the content of the values.yaml file
-            def valuesFile = "${helmRepoDir}/${helmChartPath}/values.yaml"
-            def valuesContent = readFile(file: valuesFile)
+                    // Replace the tag in values.yaml with the build version
+                    sh "sed -i 's/{{ \\.Values\\.image\\.tag }}/${buildVersion}/g' helm-repo/values.yaml"
 
-            echo "Original values.yaml content:"
-            echo "${valuesContent}"
-
-            // Replace the placeholder with the build version in values.yaml
-            def updatedValuesContent = valuesContent.replace('{{ .Values.image.tag }}', buildVersion)
-
-            echo "Updated values.yaml content:"
-            echo "${updatedValuesContent}"
-
-            // Write the updated content back to the values.yaml file
-            writeFile(file: valuesFile, text: updatedValuesContent)
-
-            // Check for changes in the Helm chart directory after the update
-            def changesExist = sh(script: "cd ${helmRepoDir} && git diff --exit-code", returnStatus: true)
-            echo "Changes Exist: ${changesExist}"
-
-            // Commit and push the changes back to the repository if there are any changes
-            if (changesExist != 0) {
-                dir(helmRepoDir) {
-                    sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
-                    sh "git config --global user.name 'firassBenNacib'" // Set your name
-                    sh "git add ${helmChartPath}/values.yaml"
-                    sh "git commit -m 'Update values.yaml with build version ${buildVersion}'"
-                    sh "git push origin main"
+                    // Commit the changes and push to the Git repository
+                    sh '''
+                        cd helm-repo
+                        git config user.email "firas.bennacib@esprit.tn"
+                        git config user.name "firassBenNacib"
+                        git add values.yaml
+                        git commit -m "Update image tag to version ${buildVersion}"
+                        git push origin main
+                    '''
                 }
             }
         }
-    }
-}
-
     }
 
    post {
