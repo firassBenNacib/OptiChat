@@ -52,7 +52,7 @@ pipeline {
             }
         }
 
-       stage('Build docker image') {
+      stage('Build docker image') {
     steps {
         script {
             def appName = 'kube-keda' // Replace with your app name
@@ -71,19 +71,12 @@ pipeline {
                 echo "Image ${previousImageTag} does not exist. Skipping removal."
             }
 
-            // Check if the current image tag exists and remove it
-            try {
-                sh "docker image inspect ${imageTag}"
-                sh "docker image rm ${imageTag}"
-            } catch (Exception e) {
-                echo "Image ${imageTag} does not exist. Skipping removal."
-            }
-
             // Build the new image with the specified appname and build version
             sh "docker build -t ${imageTag} --build-arg APP_NAME=${appName} --build-arg BUILD_VERSION=${buildVersion} ."
         }
     }
 }
+
 
 
         stage('Push image to Hub') {
