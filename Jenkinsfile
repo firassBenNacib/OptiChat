@@ -116,6 +116,9 @@ stage('Update Helm Chart') {
 
             // Change working directory to the Helm chart directory
             dir("${helmRepoDir}/${helmChartPath}") {
+                // Debugging step: Display the current working directory
+                sh "pwd"
+
                 // Debugging step: Display the content of the Helm chart directory
                 sh "ls -al"
 
@@ -124,6 +127,13 @@ stage('Update Helm Chart') {
 
                 // Debugging step: Display the content of values.yaml after the update
                 sh "cat values.yaml"
+
+                // Check if there are any changes to commit
+                try {
+                    sh "git status"
+                } catch (Exception e) {
+                    echo "Error while checking git status."
+                }
 
                 // Commit and push the changes back to the repository
                 git branch: 'main', credentialsId: 'jenkins-github-token', url: 'https://github.com/firassBenNacib/appfor-helm.git'
@@ -136,7 +146,6 @@ stage('Update Helm Chart') {
         }
     }
 }
-
     }
 
 
