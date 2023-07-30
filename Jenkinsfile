@@ -7,6 +7,7 @@ pipeline {
         SCANNER_HOME = tool 'SonarScanner'
         APP_NAME = 'kube-keda'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
+        HELM_CHART_PATH = './path/to/helm/chart' // Replace with the actual path to your Helm chart
     }
 
     stages {
@@ -49,14 +50,27 @@ pipeline {
             }
         }
 
-        stage('Build docker image') {
+         stage('Build docker image') {
             steps {
                 script {
-                    def imageName = "${APP_NAME}:${BUILD_NUMBER}"
-                    sh "docker build -t ${imageName} ."
+                    def appName = 'my-app-name' // Replace with your app name
+                    def buildVersion = "${env.BUILD_NUMBER}"
+                    def imageTag = "${appName}:${buildVersion}"
+
+                    // Check if the image with the same tag exists and remove it
+                    try {
+                        sh "docker image inspect ${imageTag}"
+                        sh "docker image rm ${imageTag}"
+                    } catch (Exception e) {
+                        echo "Image ${imageTag} does not exist. Skipping removal."
+                    }
+
+                    // Build the new image with the specified appname and build version
+                    sh "docker build -t ${imageTag} --build-arg APP_NAME=${appName} --build-arg BUILD_VERSION=${buildVersion} ."
                 }
             }
         }
+
 
         stage('Push image to Hub') {
             steps {
@@ -72,40 +86,22 @@ pipeline {
             }
         }
 
-        stage('Update Helm Chart') {
+          stage('Update Helm Chart') {
             steps {
                 script {
-                    // Clone the Helm chart repository to the 'helm' directory
-                    dir('helm') {
-                        git url: 'https://github.com/firassBenNacib/appfor-helm', branch: 'main'
+                    def appName = 'my-app-name' // Replace with your app name
+                    def buildVersion = "${env.BUILD_NUMBER}"
+                    def valueYamlPath = "./path/to/helm/chart/value.yaml"
 
-                        // Print the content of the 'helm' directory for debugging
-                        sh 'ls -l'
-
-                        // Print the content of the 'values.yaml' file for debugging
-                        sh 'cat values.yaml'
-
-                        // Change the working directory to the 'helm' directory
-                        dir('appfor-helm/helm') {
-                            // Update the values.yaml file with the new Docker image tag
-                            sh "sed -i 's|imageTag: .*|imageTag: ${BUILD_NUMBER}|' values.yaml"
-
-                            // Print the updated 'values.yaml' file for debugging
-                            sh 'cat values.yaml'
-
-                            // Commit and push the changes
-                            git add 'values.yaml'
-                            git commit -m 'Update Docker image tag'
-                            git push
-                        }
-                    }
+                    // Replace the placeholder with the build version in value.yaml
+                    sh "sed -i 's/{{ .Values.appVersion }}/${buildVersion}/g' ${valueYamlPath}"
                 }
             }
         }
     }
 
 
-    post {
+   post {
         success {
             script {
                 slackSend(
@@ -114,9 +110,9 @@ pipeline {
                     channel: '#jenkins',
                     tokenCredentialId: 'Slack-Token'
                 )
-                emailext body: "Build successful!",
-                         subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!",
-                         to: "firas.bennacib@esprit.tn",
+                emailext body: "Build successful!", 
+                         subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!", 
+                         to: "firas.bennacib@esprit.tn", 
                          mimeType: 'text/plain'
             }
         }
@@ -128,9 +124,9 @@ pipeline {
                     channel: '#jenkins',
                     tokenCredentialId: 'Slack-Token'
                 )
-                emailext body: "Build failed!",
-                         subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!",
-                         to: "firas.bennacib@esprit.tn",
+                emailext body: "Build failed!", 
+                         subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - \$BUILD_STATUS!", 
+                         to: "firas.bennacib@esprit.tn", 
                          mimeType: 'text/plain'
             }
         }
