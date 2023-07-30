@@ -126,12 +126,7 @@ pipeline {
                         sh "cat values.yaml"
                     }
 
-                    // Check for changes in the Helm chart directory after the sed command
-                    def changesExist = sh(script: "git diff --exit-code", returnStatus: true)
-                    echo "Changes Exist: ${changesExist}"
-
-                    // Commit and push the changes back to the repository if there are any changes
-                    if (changesExist != 0) {
+    
                         dir(helmRepoDir) {
                             sh "git config --global user.email 'firas.bennacib@esprit.tn'" // Set your email
                             sh "git config --global user.name 'firassBenNacib'" // Set your name
@@ -139,7 +134,7 @@ pipeline {
                             sh "git commit -m 'Update values.yaml with build version ${buildVersion}'"
                             sh "git push origin main"
                         }
-                    }
+                    
                 }
             }
         }
