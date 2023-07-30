@@ -102,7 +102,7 @@ pipeline {
             }
         }
     }
-
+    }
 
    post {
         success {
@@ -134,5 +134,4 @@ pipeline {
             }
         }
     }
-}
 }
