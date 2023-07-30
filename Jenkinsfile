@@ -111,16 +111,16 @@ pipeline {
 
                 // Change working directory to the Helm chart directory
                 dir("${helmRepoDir}/${helmChartPath}") {
-                    // Debugging step: Display the content of values.yaml before the update
-                    sh "cat values.yaml"
-                    
-                    // Replace the placeholder with the build version in values.yaml
-                    sh "sed -i 's/{{ \\.Values\\.image\\.tag }}/295/g' values.yaml"
+                // Debugging step: Display the content of values.yaml before the update
+                sh "cat values.yaml"
+                
+                // Replace the placeholder with the build version in values.yaml
+                sh "sed -i 's/{{ \\.Values\\.image\\.tag }}/295/g' values.yaml"
 
-                    
-                    // Debugging step: Display the content of values.yaml after the update
-                    sh "cat values.yaml"
-                }
+                // Debugging step: Display the content of values.yaml after the update
+                sh "cat values.yaml"
+            }
+
 
                 // Check for changes in the Helm chart directory after the sed command
                 def changesExist = sh(script: "git diff --exit-code", returnStatus: true)
