@@ -97,7 +97,6 @@ stage('Update Chart') {
     environment {
         GIT_USER_NAME = "firassBenNacib"
         GIT_REPO_URL = "github.com/firassBenNacib/appfor-helm.git"
-        BUILD_VERSION = "${env.BUILD_NUMBER}"
     }
     steps {
         withCredentials([string(credentialsId: 'GITHUB_USERNAME', variable: 'GITHUB_USERNAME'),
@@ -106,19 +105,17 @@ stage('Update Chart') {
             sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
             dir('helm-repo/helm') {
-                // Update the values.yaml file with the latest build version
-                sh "sed -i 's/tag: latest/tag: ${BUILD_VERSION}/g' values.yaml"
+                // Update the values.yaml file
+                sh 'sed -i "s/tag: latest/tag: 338/g" values.yaml'
 
                 // Check the git status
                 sh 'git status'
 
-                // Add all changes (including untracked files) to the staging area
-                sh 'git add .'
-
                 // Commit the changes
                 sh 'git config user.email "firas.bennacib@esprit.tn"'
                 sh "git config user.name $GIT_USER_NAME"
-                sh "git commit -m 'Update values.yaml with build version ${BUILD_VERSION}'"
+                sh 'git add values.yaml'
+                sh 'git commit -m "Update values.yaml with build version 338"'
 
                 // Push the changes back to the repository
                 sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
@@ -126,7 +123,6 @@ stage('Update Chart') {
         }
     }
 }
-
 
 
 
