@@ -112,10 +112,12 @@ stage('Update Chart') {
                 // Check the git status
                 sh 'git status'
 
+                // Add all changes (including untracked files) to the staging area
+                sh 'git add .'
+
                 // Commit the changes
                 sh 'git config user.email "firas.bennacib@esprit.tn"'
                 sh "git config user.name $GIT_USER_NAME"
-                sh 'git add values.yaml'
                 sh "git commit -m 'Update values.yaml with build version ${BUILD_VERSION}'"
 
                 // Push the changes back to the repository
@@ -124,6 +126,9 @@ stage('Update Chart') {
         }
     }
 }
+
+
+
 
     }
 
