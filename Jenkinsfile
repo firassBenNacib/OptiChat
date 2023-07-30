@@ -118,8 +118,8 @@ pipeline {
                     // Commit the changes and push to the Git repository
                     dir(helmRepoDir) {
                         sh '''
-                            git config user.email "youremail@example.com"
-                            git config user.name "Your Name"
+                            git config user.email "firas.bennacib@esprit.tn"
+                            git config user.name "firassBenNacib"
                             git add values.yaml
                             git commit -m "Update image tag to version ${buildVersion}"
                             git push origin main
