@@ -88,7 +88,7 @@ pipeline {
                 }
             }
         }
-    stage('Update Helm Chart') {
+   stage('Update Helm Chart') {
     steps {
         script {
             def appName = 'kube-keda' // Replace with your app name
@@ -113,8 +113,14 @@ pipeline {
             def valuesFile = "${helmRepoDir}/${helmChartPath}/values.yaml"
             def valuesContent = readFile(file: valuesFile)
 
+            echo "Original values.yaml content:"
+            echo "${valuesContent}"
+
             // Replace the placeholder with the build version in values.yaml
             def updatedValuesContent = valuesContent.replace('{{ .Values.image.tag }}', buildVersion)
+
+            echo "Updated values.yaml content:"
+            echo "${updatedValuesContent}"
 
             // Write the updated content back to the values.yaml file
             writeFile(file: valuesFile, text: updatedValuesContent)
