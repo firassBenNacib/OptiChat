@@ -110,8 +110,8 @@ stage('Update Chart') {
                     // Update the values.yaml file with the current tag
                     sh "sed -i '/^tag: /s/tag: /tag: ${BUILD_NUMBER}/g' values.yaml"
 
-                    // Stage all changes
-                    sh 'git add .'
+                    // Stage the modified values.yaml
+                    sh 'git add values.yaml'
 
                     // Check for uncommitted changes
                     def hasUncommittedChanges = sh(returnStatus: true, script: 'git diff-index --quiet HEAD --')
@@ -130,6 +130,7 @@ stage('Update Chart') {
         }
     }
 }
+
 
 
 
