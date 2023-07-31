@@ -108,10 +108,16 @@ stage('Update Chart') {
                     def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
 
                     // Update the values.yaml file with the current tag
-                    sh "sed -i 's/tag: ${currentTag}/tag: ${BUILD_NUMBER}/g' values.yaml"
+                    sh "sed -i '/^tag: ${currentTag}/s/tag: ${currentTag}/tag: ${BUILD_NUMBER}/g' values.yaml"
 
-                    // Check the git status
-                    sh 'git status'
+                    // Check the contents of the directory before git clean
+                    sh 'ls -la'
+
+                    // Remove untracked files
+                    sh 'git clean -f'
+
+                    // Check the contents of the directory after git clean
+                    sh 'ls -la'
 
                     // Commit the changes
                     sh 'git config user.email "firas.bennacib@esprit.tn"'
@@ -126,6 +132,7 @@ stage('Update Chart') {
         }
     }
 }
+
 
     }  
 
