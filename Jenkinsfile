@@ -104,40 +104,36 @@ stage('Update Chart') {
                 sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
                 dir('helm-repo/helm') {
-                    // Read the content of values.yaml into a variable
-                    def valuesContent = readFile('values.yaml')
+                    // Get the current tag from values.yaml
+                    def currentTag = sh(returnStdout: true, script: 'cat values.yaml; grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
 
-                    // Extract the current tag value using a regular expression
-                    def matcher = valuesContent =~ /(?m)^ *tag: +(\S+)/
-                    def currentTag = matcher ? matcher.group(1).trim() : null
+                    // Display the contents of values.yaml for debugging
+                    echo "values.yaml contents:"
+                    echo readFile('values.yaml')
 
-                    // Display the current tag for verification
+                    // Display the currentTag for debugging
                     echo "Current Tag: ${currentTag}"
 
-                    // Check if the currentTag is not null before continuing
-                    if (currentTag != null) {
-                        // Update the values.yaml file with the current tag
-                        writeFile file: 'values.yaml', text: valuesContent.replace("tag: ${currentTag}", "tag: ${BUILD_NUMBER}")
+                    // Update the values.yaml file with the current tag
+                    sh "sed -i 's/tag: ${currentTag}/tag: ${BUILD_NUMBER}/g' values.yaml"
 
-                        // Check the git status
-                        sh 'git status'
+                    // Check the git status
+                    sh 'git status'
 
-                        // Commit the changes
-                        sh 'git config user.email "firas.bennacib@esprit.tn"'
-                        sh "git config user.name $GIT_USER_NAME"
-                        sh 'git add values.yaml'
-                        sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
+                    // Commit the changes
+                    sh 'git config user.email "firas.bennacib@esprit.tn"'
+                    sh "git config user.name $GIT_USER_NAME"
+                    sh 'git add values.yaml'
+                    sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
 
-                        // Push the changes back to the repository
-                        sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
-                    } else {
-                        error "Failed to extract the current tag from values.yaml."
-                    }
+                    // Push the changes back to the repository
+                    sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
                 }
             }
         }
     }
 }
+
 
 
 
