@@ -91,49 +91,41 @@ pipeline {
     }
 }
 
-   stage('Update Chart') {
+stage('Update Chart') {
     environment {
         GIT_USER_NAME = "firassBenNacib"
         GIT_REPO_URL = "github.com/firassBenNacib/appfor-helm.git"
     }
- steps {
-    script {
-        withCredentials([string(credentialsId: 'GITHUB_USERNAME', variable: 'GITHUB_USERNAME'),
-                         string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
-            // Clone the repository to the 'helm-repo' directory
-            sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
+    steps {
+        script {
+            withCredentials([string(credentialsId: 'GITHUB_USERNAME', variable: 'GITHUB_USERNAME'),
+                             string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
+                // Clone the repository to the 'helm-repo' directory
+                sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
-            dir('helm-repo/helm') {
-                // Get the current tag from values.yaml
-                def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
+                dir('helm-repo/helm') {
+                    // Get the current tag from values.yaml
+                    def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
 
-                // Update the values.yaml file with the current tag
-                sh "sed -i 's/^tag: ${currentTag}/tag: ${BUILD_NUMBER}/g' values.yaml"
+                    // Update the values.yaml file with the current tag
+                    sh "sed -i 's/tag: ${currentTag}/tag: ${BUILD_NUMBER}/g' values.yaml"
 
-                // Check the git status
-                sh 'git status'
+                    // Check the git status
+                    sh 'git status'
 
-                // Clean up the working directory (remove untracked files)
-                sh 'git clean -df'
+                    // Commit the changes
+                    sh 'git config user.email "firas.bennacib@esprit.tn"'
+                    sh "git config user.name $GIT_USER_NAME"
+                    sh 'git add values.yaml'
+                    sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
 
-                // Commit the changes
-                sh 'git config user.email "firas.bennacib@esprit.tn"'
-                sh "git config user.name $GIT_USER_NAME"
-                sh 'git add values.yaml'
-                sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
+                    // Push the changes back to the repository
+                    sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
+                }
             }
-
-            // Commit the changes to the repository outside of the dir block
-            sh 'git status'
-            sh 'git add helm-repo/helm/values.yaml'
-            sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
-
-            // Push the changes back to the repository
-            sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
         }
     }
 }
-   }
 
     }  
 
