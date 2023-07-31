@@ -104,34 +104,28 @@ stage('Update Chart') {
                 sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
                 dir('helm-repo/helm') {
-                    // Get the current tag from values.yaml
-                    def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
+                    // Get the current tag from values.yaml without "tag:" included
+                    def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk -F ": " \'{print $2}\'').trim()
 
                     // Update the values.yaml file with the current tag
-                    sh "sed -i '/^tag: /s/tag: /tag: ${BUILD_NUMBER}/g' values.yaml"
+                    sh "sed -i 's/^tag: ${currentTag}/tag: ${BUILD_NUMBER}/g' values.yaml"
 
-                    // Stage the modified values.yaml
+                    // Check the git status
+                    sh 'git status'
+
+                    // Commit the changes
+                    sh 'git config user.email "firas.bennacib@esprit.tn"'
+                    sh "git config user.name $GIT_USER_NAME"
                     sh 'git add values.yaml'
+                    sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
 
-                    // Check for uncommitted changes
-                    def hasUncommittedChanges = sh(returnStatus: true, script: 'git diff-index --quiet HEAD --')
-
-                    // If there are no uncommitted changes, commit and push
-                    if (hasUncommittedChanges != 0) {
-                        sh 'git config user.email "firas.bennacib@esprit.tn"'
-                        sh "git config user.name $GIT_USER_NAME"
-                        sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
-                        sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
-                    } else {
-                        echo "No changes to commit."
-                    }
+                    // Push the changes back to the repository
+                    sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
                 }
             }
         }
     }
 }
-
-
 
 
     }  
