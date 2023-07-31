@@ -110,19 +110,23 @@ stage('Update Chart') {
                     // Get the current tag from values.yaml
                     def currentTag = valuesContent =~ /^tag:\s*(.*)$/ ? (valuesContent =~ /^tag:\s*(.*)$/)[0][1] : ''
 
-                    // Replace the current tag with the new tag
-                    def newValuesContent = valuesContent.replaceFirst(/tag:\s*${currentTag}/, "tag: ${BUILD_NUMBER}")
+                    // Set the new tag value
+                    def newTag = BUILD_NUMBER
+
+                    // Replace the current tag with the new tag in values.yaml
+                    def newValuesContent = valuesContent.replaceFirst(/tag:\s*${currentTag}/, "tag: ${newTag}")
 
                     // Write the updated contents back to values.yaml
                     writeFile(file: 'values.yaml', text: newValuesContent)
 
                     // Check the git status
                     sh 'git status'
+
                     // Commit the changes
                     sh 'git config user.email "firas.bennacib@esprit.tn"'
                     sh "git config user.name $GIT_USER_NAME"
                     sh 'git add values.yaml'
-                    sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
+                    sh "git commit -m 'Update values.yaml with build version ${newTag}'"
 
                     // Push the changes back to the repository
                     sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
@@ -131,6 +135,7 @@ stage('Update Chart') {
         }
     }
 }
+
 
 
 
