@@ -107,8 +107,14 @@ stage('Update Chart') {
                     // Set the new tag value
                     def newTag = BUILD_NUMBER
 
-                    // Create a new values.yaml file with just the new tag value
-                    writeFile(file: 'values.yaml', text: "tag: ${newTag}")
+                    // Read the current values.yaml content
+                    def currentContent = readFile('values.yaml')
+
+                    // Update the tag value
+                    def updatedContent = currentContent.replaceAll(/(^tag:\s+).*/, "\$1${newTag}")
+
+                    // Write back the updated content to values.yaml
+                    writeFile(file: 'values.yaml', text: updatedContent)
 
                     // Check the git status
                     sh 'git status'
@@ -126,6 +132,7 @@ stage('Update Chart') {
         }
     }
 }
+
 
 
 
