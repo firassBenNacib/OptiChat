@@ -91,7 +91,7 @@ pipeline {
     }
 }
 
-   stage('Update Chart') {
+  stage('Update Chart') {
     environment {
         GIT_USER_NAME = "firassBenNacib"
         GIT_REPO_URL = "github.com/firassBenNacib/appfor-helm.git"
@@ -108,7 +108,9 @@ pipeline {
                     def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
 
                     // Update the values.yaml file with the current tag
-                    sh "sed -i 's/^tag: \${currentTag\}$/tag: \${BUILD_NUMBER}/g' values.yaml"
+                    sh """
+                    sed -i 's/^tag: \${currentTag}$/tag: \${BUILD_NUMBER}/g' values.yaml
+                    """
 
                     // Check the git status
                     sh 'git status'
