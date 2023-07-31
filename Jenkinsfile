@@ -105,7 +105,7 @@ stage('Update Chart') {
 
                 dir('helm-repo/helm') {
                     // Get the current tag from values.yaml
-                    def currentTag = sh(returnStdout: true, script: 'cat values.yaml; grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
+                    def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
 
                     // Display the contents of values.yaml for debugging
                     echo "values.yaml contents:"
@@ -114,8 +114,8 @@ stage('Update Chart') {
                     // Display the currentTag for debugging
                     echo "Current Tag: ${currentTag}"
 
-                    // Update the values.yaml file with the current tag using sed with a custom delimiter '|'
-                    sh "sed -i 's|tag: ${currentTag}|tag: ${BUILD_NUMBER}|g' values.yaml"
+                    // Update the values.yaml file with the current tag using sed with a different delimiter '%'
+                    sh "sed -i 's%tag: ${currentTag}%tag: ${BUILD_NUMBER}%g' values.yaml"
 
                     // Check the git status
                     sh 'git status'
@@ -133,10 +133,6 @@ stage('Update Chart') {
         }
     }
 }
-
-
-
-
 
 
 
