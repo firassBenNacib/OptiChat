@@ -104,9 +104,7 @@ pipeline {
 
             dir('helm-repo/helm') {
                 // Update the values.yaml file
-               sh """
-               sed -i 's/^tag: \${currentTag}\$/tag: \${BUILD_NUMBER}/g' values.yaml
-               """
+                sh 'sed -i "s/tag: 338/tag: ${env.BUILD_NUMBER}/g" values.yaml'
 
                 // Check the git status
                 sh 'git status'
