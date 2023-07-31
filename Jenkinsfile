@@ -122,7 +122,7 @@ stage('Update Chart') {
                     // Commit the changes
                     sh 'git config user.email "firas.bennacib@esprit.tn"'
                     sh "git config user.name $GIT_USER_NAME"
-                    sh 'git add values.yaml'
+                    sh 'git add . --all'
                     sh "git commit -m 'Update values.yaml with build version ${newTag}'"
 
                     // Push the changes back to the repository
@@ -132,6 +132,7 @@ stage('Update Chart') {
         }
     }
 }
+
 
 
 
