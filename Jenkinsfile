@@ -108,7 +108,7 @@ stage('Update Chart') {
                     def valuesContent = readFile('values.yaml')
 
                     // Extract the current tag value using regex
-                    def currentTag = (valuesContent =~ /^tag:\s*(.*)$/)?.group(1)?.trim()
+                    def currentTag = (valuesContent =~ /^ *tag: +(\S+)/)?.group(1)?.trim()
 
                     // Display the current tag for verification
                     echo "Current Tag: ${currentTag}"
@@ -132,6 +132,7 @@ stage('Update Chart') {
         }
     }
 }
+
 
 
 
