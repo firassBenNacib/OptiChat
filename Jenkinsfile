@@ -66,31 +66,6 @@ pipeline {
 
 
 
-    stage('Push image to Hub') {
-    steps {
-        script {
-            def appName = 'kube-keda' 
-            def buildVersion = "${env.BUILD_NUMBER}"
-            def imageTag = "${appName}:${buildVersion}"
-            def previousBuildNumber = buildVersion.toInteger() - 1
-            def previousImageTag = "${appName}:${previousBuildNumber}"
-
-            withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
-                sh "docker login -u firaskill12 -p ${dockerhubpwd}"
-                sh "docker tag ${imageTag} firaskill12/${imageTag}"
-                sh "docker push firaskill12/${imageTag}"
-
-             
-                try {
-                    sh "docker image rm firaskill12/${previousImageTag}"
-                } catch (Exception e) {
-                    echo "Image firaskill12/${previousImageTag} does not exist. Skipping removal."
-                }
-            }
-        }
-    }
-}
-
 stage('Update Chart') {
     environment {
         GIT_USER_NAME = "firassBenNacib"
@@ -105,7 +80,7 @@ stage('Update Chart') {
 
                 dir('helm-repo/helm') {
                     // Get the current tag from values.yaml
-                    def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
+                    def currentTag = sh(returnStdout: true, script: 'grep "^ *tag:" values.yaml | awk \'{print $2}\'').trim()
 
                     // Display the contents of values.yaml for debugging
                     echo "values.yaml contents:"
@@ -114,8 +89,8 @@ stage('Update Chart') {
                     // Display the currentTag for debugging
                     echo "Current Tag: ${currentTag}"
 
-                    // Update the values.yaml file with the current tag using sed with a different delimiter '%'
-                    sh "sed -i 's%tag: ${currentTag}%tag: ${BUILD_NUMBER}%g' values.yaml"
+                    // Update the values.yaml file with the current tag using sed with the correct pattern
+                    sh "sed -i 's/^ *tag: ${currentTag}/  tag: ${BUILD_NUMBER}/' values.yaml"
 
                     // Check the git status
                     sh 'git status'
@@ -133,6 +108,7 @@ stage('Update Chart') {
         }
     }
 }
+
 
 
 
