@@ -104,11 +104,11 @@ stage('Update Chart') {
                 sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
                 dir('helm-repo/helm') {
-                    // Get the current tag from values.yaml without "tag:" included
-                    def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk -F ": " \'{print $2}\'').trim()
+                    // Get the current tag from values.yaml
+                    def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
 
                     // Update the values.yaml file with the current tag
-                    sh "sed -i 's/^tag: ${currentTag}/tag: ${BUILD_NUMBER}/g' values.yaml"
+                    sh "sed -i 's/tag: ${currentTag}/tag: ${BUILD_NUMBER}/g' values.yaml"
 
                     // Check the git status
                     sh 'git status'
@@ -126,6 +126,7 @@ stage('Update Chart') {
         }
     }
 }
+
 
 
     }  
