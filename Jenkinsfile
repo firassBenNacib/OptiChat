@@ -96,7 +96,7 @@ pipeline {
         GIT_USER_NAME = "firassBenNacib"
         GIT_REPO_URL = "github.com/firassBenNacib/appfor-helm.git"
     }
-  steps {
+ steps {
     script {
         withCredentials([string(credentialsId: 'GITHUB_USERNAME', variable: 'GITHUB_USERNAME'),
                          string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
@@ -113,13 +113,14 @@ pipeline {
                 // Check the git status
                 sh 'git status'
 
+                // Clean up the working directory (remove untracked files)
+                sh 'git clean -df'
+
                 // Commit the changes
                 sh 'git config user.email "firas.bennacib@esprit.tn"'
                 sh "git config user.name $GIT_USER_NAME"
                 sh 'git add values.yaml'
                 sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
-
-                // Exit the dir block to return to the previous working directory
             }
 
             // Commit the changes to the repository outside of the dir block
@@ -132,10 +133,9 @@ pipeline {
         }
     }
 }
-}
    }
 
-    
+    }  
 
    post {
         success {
