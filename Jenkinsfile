@@ -104,20 +104,11 @@ stage('Update Chart') {
                 sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
                 dir('helm-repo/helm') {
-                    // Read the current contents of values.yaml
-                    def valuesContent = readFile('values.yaml')
-
-                    // Get the current tag from values.yaml
-                    def currentTag = valuesContent =~ /^tag:\s*(.*)$/ ? (valuesContent =~ /^tag:\s*(.*)$/)[0][1] : ''
-
                     // Set the new tag value
                     def newTag = BUILD_NUMBER
 
-                    // Replace the current tag with the new tag in values.yaml
-                    def newValuesContent = valuesContent.replaceFirst(/tag:\s*${currentTag}/, "tag: ${newTag}")
-
-                    // Write the updated contents back to values.yaml
-                    writeFile(file: 'values.yaml', text: newValuesContent)
+                    // Create a new values.yaml file with just the new tag value
+                    writeFile(file: 'values.yaml', text: "tag: ${newTag}")
 
                     // Check the git status
                     sh 'git status'
