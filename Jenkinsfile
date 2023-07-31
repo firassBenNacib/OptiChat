@@ -107,31 +107,38 @@ stage('Update Chart') {
                     // Read the content of values.yaml into a variable
                     def valuesContent = readFile('values.yaml')
 
-                    // Extract the current tag value using regex
-                    def currentTag = (valuesContent =~ /^ *tag: +(\S+)/)?.group(1)?.trim()
+                    // Extract the current tag value using a regular expression
+                    def matcher = valuesContent =~ /(?m)^ *tag: +(\S+)/
+                    def currentTag = matcher ? matcher.group(1).trim() : null
 
                     // Display the current tag for verification
                     echo "Current Tag: ${currentTag}"
 
-                    // Update the values.yaml file with the current tag
-                    writeFile file: 'values.yaml', text: valuesContent.replace("tag: ${currentTag}", "tag: ${BUILD_NUMBER}")
+                    // Check if the currentTag is not null before continuing
+                    if (currentTag != null) {
+                        // Update the values.yaml file with the current tag
+                        writeFile file: 'values.yaml', text: valuesContent.replace("tag: ${currentTag}", "tag: ${BUILD_NUMBER}")
 
-                    // Check the git status
-                    sh 'git status'
+                        // Check the git status
+                        sh 'git status'
 
-                    // Commit the changes
-                    sh 'git config user.email "firas.bennacib@esprit.tn"'
-                    sh "git config user.name $GIT_USER_NAME"
-                    sh 'git add values.yaml'
-                    sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
+                        // Commit the changes
+                        sh 'git config user.email "firas.bennacib@esprit.tn"'
+                        sh "git config user.name $GIT_USER_NAME"
+                        sh 'git add values.yaml'
+                        sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
 
-                    // Push the changes back to the repository
-                    sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
+                        // Push the changes back to the repository
+                        sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
+                    } else {
+                        error "Failed to extract the current tag from values.yaml."
+                    }
                 }
             }
         }
     }
 }
+
 
 
 
