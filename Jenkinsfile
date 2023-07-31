@@ -66,6 +66,31 @@ pipeline {
 
 
 
+    stage('Push image to Hub') {
+    steps {
+        script {
+            def appName = 'kube-keda' 
+            def buildVersion = "${env.BUILD_NUMBER}"
+            def imageTag = "${appName}:${buildVersion}"
+            def previousBuildNumber = buildVersion.toInteger() - 1
+            def previousImageTag = "${appName}:${previousBuildNumber}"
+
+            withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
+                sh "docker login -u firaskill12 -p ${dockerhubpwd}"
+                sh "docker tag ${imageTag} firaskill12/${imageTag}"
+                sh "docker push firaskill12/${imageTag}"
+
+             
+                try {
+                    sh "docker image rm firaskill12/${previousImageTag}"
+                } catch (Exception e) {
+                    echo "Image firaskill12/${previousImageTag} does not exist. Skipping removal."
+                }
+            }
+        }
+    }
+}
+
 stage('Update Chart') {
     environment {
         GIT_USER_NAME = "firassBenNacib"
@@ -108,8 +133,6 @@ stage('Update Chart') {
         }
     }
 }
-
-
 
 
 
