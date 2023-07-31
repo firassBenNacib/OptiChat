@@ -108,13 +108,13 @@ stage('Update Chart') {
                     def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
 
                     // Update the values.yaml file with the current tag
-                    sh "sed -i '/^tag: ${currentTag}/s/tag: ${currentTag}/tag: ${BUILD_NUMBER}/g' values.yaml"
+                    sh "sed -i '/^tag: /s/tag: /tag: ${BUILD_NUMBER}/g' values.yaml"
 
                     // Check the contents of the directory before git clean
                     sh 'ls -la'
 
                     // Remove untracked files
-                    sh 'git clean -f'
+                    sh 'git clean -f -d'
 
                     // Check the contents of the directory after git clean
                     sh 'ls -la'
@@ -132,6 +132,7 @@ stage('Update Chart') {
         }
     }
 }
+
 
 
     }  
