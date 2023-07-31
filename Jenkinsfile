@@ -104,17 +104,14 @@ stage('Update Chart') {
                 sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
                 dir('helm-repo/helm') {
-                    // Set the new tag value
-                    def newTag = BUILD_NUMBER
+                    // Get the current tag from values.yaml
+                    def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
 
-                    // Read the current values.yaml content
-                    def currentContent = readFile('values.yaml')
+                    // Display the current tag for verification
+                    echo "Current Tag: ${currentTag}"
 
-                    // Update the tag value
-                    def updatedContent = currentContent.replaceAll(/(^tag:\s+).*/, "\$1${newTag}")
-
-                    // Write back the updated content to values.yaml
-                    writeFile(file: 'values.yaml', text: updatedContent)
+                    // Update the values.yaml file with the current tag
+                    writeFile file: 'values.yaml', text: readFile('values.yaml').replace("tag: ${currentTag}", "tag: ${BUILD_NUMBER}")
 
                     // Check the git status
                     sh 'git status'
@@ -122,8 +119,8 @@ stage('Update Chart') {
                     // Commit the changes
                     sh 'git config user.email "firas.bennacib@esprit.tn"'
                     sh "git config user.name $GIT_USER_NAME"
-                    sh 'git add . --all'
-                    sh "git commit -m 'Update values.yaml with build version ${newTag}'"
+                    sh 'git add values.yaml'
+                    sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
 
                     // Push the changes back to the repository
                     sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
