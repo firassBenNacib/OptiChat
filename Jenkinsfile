@@ -104,15 +104,20 @@ stage('Update Chart') {
                 sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
                 dir('helm-repo/helm') {
-                    // Get the current tag from values.yaml
-                    def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
+                    // Read the current contents of values.yaml
+                    def valuesContent = readFile('values.yaml')
 
-                    // Update the values.yaml file with the current tag
-                    sh "sed -i 's/tag: ${currentTag}/tag: ${BUILD_NUMBER}/g' values.yaml"
+                    // Get the current tag from values.yaml
+                    def currentTag = valuesContent =~ /^tag:\s*(.*)$/ ? (valuesContent =~ /^tag:\s*(.*)$/)[0][1] : ''
+
+                    // Replace the current tag with the new tag
+                    def newValuesContent = valuesContent.replaceFirst(/tag:\s*${currentTag}/, "tag: ${BUILD_NUMBER}")
+
+                    // Write the updated contents back to values.yaml
+                    writeFile(file: 'values.yaml', text: newValuesContent)
 
                     // Check the git status
                     sh 'git status'
-
                     // Commit the changes
                     sh 'git config user.email "firas.bennacib@esprit.tn"'
                     sh "git config user.name $GIT_USER_NAME"
