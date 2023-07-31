@@ -110,23 +110,21 @@ stage('Update Chart') {
                     // Update the values.yaml file with the current tag
                     sh "sed -i '/^tag: /s/tag: /tag: ${BUILD_NUMBER}/g' values.yaml"
 
-                    // Check the contents of the directory before git clean
-                    sh 'ls -la'
+                    // Stage all changes
+                    sh 'git add .'
 
-                    // Remove untracked files
-                    sh 'git clean -f -d'
+                    // Check for uncommitted changes
+                    def hasUncommittedChanges = sh(returnStatus: true, script: 'git diff-index --quiet HEAD --')
 
-                    // Check the contents of the directory after git clean
-                    sh 'ls -la'
-
-                    // Commit the changes
-                    sh 'git config user.email "firas.bennacib@esprit.tn"'
-                    sh "git config user.name $GIT_USER_NAME"
-                    sh 'git add values.yaml'
-                    sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
-
-                    // Push the changes back to the repository
-                    sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
+                    // If there are no uncommitted changes, commit and push
+                    if (hasUncommittedChanges != 0) {
+                        sh 'git config user.email "firas.bennacib@esprit.tn"'
+                        sh "git config user.name $GIT_USER_NAME"
+                        sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
+                        sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
+                    } else {
+                        echo "No changes to commit."
+                    }
                 }
             }
         }
