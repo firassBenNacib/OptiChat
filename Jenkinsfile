@@ -104,14 +104,17 @@ stage('Update Chart') {
                 sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
 
                 dir('helm-repo/helm') {
-                    // Get the current tag from values.yaml
-                    def currentTag = sh(returnStdout: true, script: 'grep "^tag:" values.yaml | awk \'{print $2}\'').trim()
+                    // Read the content of values.yaml into a variable
+                    def valuesContent = readFile('values.yaml')
+
+                    // Extract the current tag value using regex
+                    def currentTag = (valuesContent =~ /^tag:\s*(.*)$/)?.group(1)?.trim()
 
                     // Display the current tag for verification
                     echo "Current Tag: ${currentTag}"
 
                     // Update the values.yaml file with the current tag
-                    writeFile file: 'values.yaml', text: readFile('values.yaml').replace("tag: ${currentTag}", "tag: ${BUILD_NUMBER}")
+                    writeFile file: 'values.yaml', text: valuesContent.replace("tag: ${currentTag}", "tag: ${BUILD_NUMBER}")
 
                     // Check the git status
                     sh 'git status'
@@ -129,9 +132,6 @@ stage('Update Chart') {
         }
     }
 }
-
-
-
 
 
 
