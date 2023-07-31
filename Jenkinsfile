@@ -96,7 +96,7 @@ pipeline {
         GIT_USER_NAME = "firassBenNacib"
         GIT_REPO_URL = "github.com/firassBenNacib/appfor-helm.git"
     }
-   steps {
+  steps {
     script {
         withCredentials([string(credentialsId: 'GITHUB_USERNAME', variable: 'GITHUB_USERNAME'),
                          string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
@@ -119,14 +119,22 @@ pipeline {
                 sh 'git add values.yaml'
                 sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
 
-                // Push the changes back to the repository
-                sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
+                // Exit the dir block to return to the previous working directory
             }
+
+            // Commit the changes to the repository outside of the dir block
+            sh 'git status'
+            sh 'git add helm-repo/helm/values.yaml'
+            sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
+
+            // Push the changes back to the repository
+            sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
         }
     }
 }
-   }
 }
+   }
+
     
 
    post {
