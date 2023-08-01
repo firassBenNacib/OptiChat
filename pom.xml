@@ -12,14 +12,9 @@
 	<artifactId>appfor</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>appfor</name>
-	<description>a Spring Boot app to use with prometheus</description>
+	<description>a Spring Boot app to use with Prometheus</description>
 	<properties>
 		<java.version>11</java.version>
-		<jacoco.version>0.8.6</jacoco.version>
-		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-		<sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
-		<sonar.language>java</sonar.language>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -29,12 +24,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<version>5.2.0</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.micrometer</groupId>
@@ -57,15 +46,17 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>org.jacoco</groupId>
-			<artifactId>jacoco-maven-plugin</artifactId>
-			<version>0.8.8</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-activemq</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-broker</artifactId>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>
-			<!-- Other plugins ... -->
-
 			<!-- Spring Boot Maven Plugin -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -80,42 +71,6 @@
 				<configuration>
 					<release>${java.version}</release>
 				</configuration>
-			</plugin>
-
-			<!-- Maven Surefire Plugin -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.22.2</version>
-				<configuration>
-					<!-- Use forking with 1 fork to enable Jacoco coverage -->
-					<forkCount>1</forkCount>
-					<reuseForks>true</reuseForks>
-					<!-- Optionally, you can include test classes you want to run -->
-
-				</configuration>
-			</plugin>
-
-			<!-- JaCoCo Maven Plugin -->
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>${jacoco.version}</version>
-				<executions>
-					<execution>
-						<id>jacoco-initialize</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>jacoco-site</id>
-						<phase>package</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 	</build>
