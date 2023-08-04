@@ -12,18 +12,16 @@ import java.util.logging.Logger;
 
 @Configuration
 public class QueueConfig {
-    @Value("tcp://localhost:61616")
-    private String brokerUrl;
+    private static final String BROKER_URL = "tcp://activemq-service:61616"; // Update with Kubernetes Service name and port
     private static final Logger LOGGER = Logger.getLogger(QueueConfig.class.getName());
 
     @Bean
     public ActiveMQConnectionFactory activeMQConnectionFactory() {
         ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory();
-        activeMQConnectionFactory.setBrokerURL(brokerUrl);
+        activeMQConnectionFactory.setBrokerURL(BROKER_URL);
 
         return activeMQConnectionFactory;
     }
-
     @Bean
     public DefaultJmsListenerContainerFactory jmsListenerContainerFactory() {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
