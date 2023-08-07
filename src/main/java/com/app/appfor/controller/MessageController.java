@@ -20,10 +20,17 @@ public class MessageController {
         messageSender.sendMessage(message);
     }
 
-    @PostMapping("/sendfull")
+    @PostMapping("/send-1100")
     public void sendMessages(@RequestBody String message) {
 
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 1100; i++) {
+            messageSender.sendMessage(message + " " + i);
+        }
+    }
+    @PostMapping("/send-1500")
+    public void sendMessagess(@RequestBody String message) {
+
+        for (int i = 0; i < 1500; i++) {
             messageSender.sendMessage(message + " " + i);
         }
     }
