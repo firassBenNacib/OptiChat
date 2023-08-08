@@ -1,9 +1,5 @@
 package com.app.appfor.entities;
-
-
 import lombok.*;
-
-
 import java.io.Serializable;
 
 

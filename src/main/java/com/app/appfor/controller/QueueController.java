@@ -1,5 +1,4 @@
 package com.app.appfor.controller;
-
 import com.app.appfor.service.QueueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
