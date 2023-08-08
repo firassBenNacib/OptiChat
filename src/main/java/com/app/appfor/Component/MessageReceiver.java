@@ -22,6 +22,9 @@ public class MessageReceiver {
 
     private final int batchSize = 100;
     private final long batchSleepTime = 1 * 60 * 1000;
+    private final int targetQueueSize = 1000;
+
+    private final int queueSizeMargin = 50;
 
     @Autowired
     public MessageReceiver(MeterRegistry meterRegistry, QueueService queueService) {
@@ -77,9 +80,9 @@ public class MessageReceiver {
     private boolean shouldPauseProcessing() {
         int queueSize = getPendingMessages();
         int activeProcessing = processingCounter.get();
-        int targetQueueSize = 1000;
+        boolean isFalsePositive = Math.abs(queueSize - targetQueueSize) <= queueSizeMargin;
 
-        return queueSize < targetQueueSize && activeProcessing == 0;
+        return queueSize < targetQueueSize && activeProcessing == 0 && !isFalsePositive;
     }
 
     private void waitForResume() {
@@ -95,7 +98,7 @@ public class MessageReceiver {
 
     private void simulateProcessing(String message) {
         try {
-            Thread.sleep(2000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
