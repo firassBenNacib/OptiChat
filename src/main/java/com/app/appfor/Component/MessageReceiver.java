@@ -20,11 +20,10 @@ public class MessageReceiver {
     private final QueueService queueService;
     private final MeterRegistry meterRegistry;
 
-    private final int batchSize = 100;
-    private final long batchSleepTime = 2 * 60 * 1000;
-    private final int targetQueueSize = 1000;
+    private Gauge pendingMessagesGauge;
 
-    private final int queueSizeMargin = 50;
+    private final int batchSize = 125;
+    private final long batchSleepTime = 2 * 60 * 1000;
 
     @Autowired
     public MessageReceiver(MeterRegistry meterRegistry, QueueService queueService) {
@@ -39,7 +38,7 @@ public class MessageReceiver {
                 .description("Total number of messages processed by this consumer instance")
                 .register(meterRegistry);
 
-        Gauge.builder("pending_messages", this, MessageReceiver::getPendingMessages)
+        pendingMessagesGauge = Gauge.builder("pending_messages", this, MessageReceiver::getPendingMessages)
                 .description("Number of pending messages in the queue")
                 .register(meterRegistry);
     }
@@ -52,7 +51,7 @@ public class MessageReceiver {
             }
             totalProcessedMessages.incrementAndGet();
 
-
+            // Check if processing should be paused
             if (shouldPauseProcessing()) {
                 stopAcceptingMessages.set(true);
                 waitForResume();
@@ -61,7 +60,7 @@ public class MessageReceiver {
 
             simulateProcessing(message);
 
-
+            // Check if a batch is completed and sleep if needed
             if (processingCounter.get() == 0 && totalProcessedMessages.get() % batchSize == 0) {
                 System.out.println("Completed a batch. Sleeping for " + batchSleepTime + " milliseconds.");
                 try {
@@ -71,25 +70,26 @@ public class MessageReceiver {
                 }
             }
 
-         Gauge.builder("pending_messages", this, MessageReceiver::getPendingMessages)
+            pendingMessagesGauge = Gauge.builder("pending_messages", this, MessageReceiver::getPendingMessages)
                     .description("Number of pending messages in the queue")
                     .register(meterRegistry);
         }
     }
 
     private boolean shouldPauseProcessing() {
+        // Check if queue size is below target and active processing messages are 0
         int queueSize = getPendingMessages();
         int activeProcessing = processingCounter.get();
-        boolean isFalsePositive = Math.abs(queueSize - targetQueueSize) <= queueSizeMargin;
+        int targetQueueSize = 1000; // Your target queue size
 
-        return queueSize < targetQueueSize && activeProcessing == 0 && !isFalsePositive;
+        return queueSize < targetQueueSize && activeProcessing == 0;
     }
 
     private void waitForResume() {
-
+        // Wait for active processing messages to become non-zero
         while (processingCounter.get() == 0) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(1000); // Wait for 1 second before checking again
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -98,7 +98,7 @@ public class MessageReceiver {
 
     private void simulateProcessing(String message) {
         try {
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -113,7 +113,7 @@ public class MessageReceiver {
             initiateGracefulShutdown();
         }
 
-
+        // Check if a batch is completed and sleep if needed
         if (processingCounter.get() == 0 && totalProcessedMessages.get() % batchSize == 0) {
             System.out.println("Completed a batch. Sleeping for " + batchSleepTime + " milliseconds.");
             try {
