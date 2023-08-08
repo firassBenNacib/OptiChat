@@ -21,7 +21,7 @@ public class MessageReceiver {
     private final MeterRegistry meterRegistry;
 
     private final int batchSize = 100;
-    private final long batchSleepTime = 1 * 60 * 1000;
+    private final long batchSleepTime = 2 * 60 * 1000;
     private final int targetQueueSize = 1000;
 
     private final int queueSizeMargin = 50;
