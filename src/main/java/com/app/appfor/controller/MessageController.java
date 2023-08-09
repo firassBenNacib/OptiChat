@@ -3,6 +3,7 @@ import com.app.appfor.Component.MessageSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -20,18 +21,12 @@ public class MessageController {
         messageSender.sendMessage(message);
     }
 
-    @PostMapping("/send-1100")
-    public void sendMessages(@RequestBody String message) {
+    @PostMapping("/send-multiple")
+    public void sendMultipleMessages(@RequestBody String message, @RequestParam int numMessages) {
 
-        for (int i = 0; i < 1100; i++) {
-            messageSender.sendMessage(message + " " + i);
-        }
-    }
-    @PostMapping("/send-1500")
-    public void sendMessagess(@RequestBody String message) {
-
-        for (int i = 0; i < 1500; i++) {
+        for (int i = 0; i < numMessages; i++) {
             messageSender.sendMessage(message + " " + i);
         }
     }
 }
+
