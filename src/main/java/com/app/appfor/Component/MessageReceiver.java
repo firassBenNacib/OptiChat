@@ -60,7 +60,7 @@ public class MessageReceiver {
 
             simulateProcessing(message);
 
-            // Check if a batch is completed and sleep if needed
+
             if (processingCounter.get() == 0 && totalProcessedMessages.get() % batchSize == 0) {
                 System.out.println("Completed a batch. Sleeping for " + batchSleepTime + " milliseconds.");
                 try {
@@ -77,19 +77,19 @@ public class MessageReceiver {
     }
 
     private boolean shouldPauseProcessing() {
-        // Check if queue size is below target and active processing messages are 0
+
         int queueSize = getPendingMessages();
         int activeProcessing = processingCounter.get();
-        int targetQueueSize = 1000; // Your target queue size
+        int targetQueueSize = 1000;
 
         return queueSize < targetQueueSize && activeProcessing == 0;
     }
 
     private void waitForResume() {
-        // Wait for active processing messages to become non-zero
+
         while (processingCounter.get() == 0) {
             try {
-                Thread.sleep(1000); // Wait for 1 second before checking again
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
