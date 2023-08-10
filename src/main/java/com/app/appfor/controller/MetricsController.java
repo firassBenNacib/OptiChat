@@ -58,7 +58,7 @@ public class MetricsController {
         }
     }
 
-    private double getTrafficCount() {
+    public double getTrafficCount() {
         return trafficCount;
     }
 

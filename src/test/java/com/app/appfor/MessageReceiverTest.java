@@ -18,17 +18,17 @@ public class MessageReceiverTest {
 
     @Test
     public void testReceiveMessage() {
-        // Create a mock QueueService and MeterRegistry
+
         mockQueueService = mock(QueueService.class);
         mockMeterRegistry = mock(MeterRegistry.class);
 
-        // Create the MessageReceiver with the mock QueueService and MeterRegistry
+
         MessageReceiver messageReceiver = new MessageReceiver(mockMeterRegistry, mockQueueService);
 
-        // Call the receiveMessage method
+
         String message = "Test Message";
         messageReceiver.receiveMessage(message);
 
-        // Add assertions or verifications as needed for your specific scenario
+
     }
 }
