@@ -22,7 +22,7 @@ public class MessageReceiver {
 
 
     private final int batchSize = 125;
-    private final long batchSleepTime = 2 * 60 * 1000;
+    private final long batchSleepTime = 2L * 60 * 1000;
 
     @Autowired
     public MessageReceiver(MeterRegistry meterRegistry, QueueService queueService) {
