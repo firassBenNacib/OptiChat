@@ -51,7 +51,6 @@ public class MessageReceiver {
             }
             totalProcessedMessages.incrementAndGet();
 
-            // Check if processing should be paused
             if (shouldPauseProcessing()) {
                 stopAcceptingMessages.set(true);
                 waitForResume();
