@@ -73,12 +73,12 @@ public class MessageReceiver {
     }
 
     private boolean shouldPauseProcessing() {
+
         int queueSize = getPendingMessages();
         int activeProcessing = processingCounter.get();
         int targetQueueSize = 1000;
-        int queueSizeThreshold = 50;
 
-        return queueSize < targetQueueSize && queueSize > (targetQueueSize + queueSizeThreshold) && activeProcessing == 0;
+        return queueSize < targetQueueSize && activeProcessing == 0;
     }
 
     private void waitForResume() {
