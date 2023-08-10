@@ -18,7 +18,7 @@ public class MessageReceiver {
     private final AtomicInteger totalProcessedMessages = new AtomicInteger(0);
 
     private final QueueService queueService;
-    private final MeterRegistry meterRegistry;
+
 
 
     private final int batchSize = 125;
@@ -26,7 +26,7 @@ public class MessageReceiver {
 
     @Autowired
     public MessageReceiver(MeterRegistry meterRegistry, QueueService queueService) {
-        this.meterRegistry = meterRegistry;
+
         this.queueService = queueService;
 
         Gauge.builder("active_processing_messages", processingCounter, AtomicInteger::get)
