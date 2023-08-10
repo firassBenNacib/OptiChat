@@ -20,7 +20,6 @@ public class MessageReceiver {
     private final QueueService queueService;
     private final MeterRegistry meterRegistry;
 
-    private Gauge pendingMessagesGauge;
 
     private final int batchSize = 125;
     private final long batchSleepTime = 2 * 60 * 1000;
@@ -38,7 +37,7 @@ public class MessageReceiver {
                 .description("Total number of messages processed by this consumer instance")
                 .register(meterRegistry);
 
-        pendingMessagesGauge = Gauge.builder("pending_messages", this, MessageReceiver::getPendingMessages)
+        Gauge.builder("pending_messages", this, MessageReceiver::getPendingMessages)
                 .description("Number of pending messages in the queue")
                 .register(meterRegistry);
     }
@@ -69,9 +68,7 @@ public class MessageReceiver {
                 }
             }
 
-            pendingMessagesGauge = Gauge.builder("pending_messages", this, MessageReceiver::getPendingMessages)
-                    .description("Number of pending messages in the queue")
-                    .register(meterRegistry);
+
         }
     }
 
