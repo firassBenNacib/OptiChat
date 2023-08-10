@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activemq-deployment
+  labels:
+    app: activemq
+spec:
+  replicas: 1  # You can adjust the number of replicas based on your needs
+  selector:
+    matchLabels:
+      app: activemq
+  template:
+    metadata:
+      labels:
+        app: activemq
+    spec:
+      containers:
+        - name: activemq
+          image: webcenter/activemq
+          ports:
+            - containerPort: 61616   # Expose the ActiveMQ OpenWire port
+            - containerPort: 8161    # Expose the ActiveMQ web console port
+          # Add any other configuration specific to your ActiveMQ setup here
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: activemq-service
+spec:
+  selector:
+    app: activemq   # Match this selector with the labels of your ActiveMQ Deployment
+  ports:
+    - name: openwire
+      protocol: TCP
+      port: 61616
+      targetPort: 61616
+    - name: web-console
+      protocol: TCP
+      port: 8161
+      targetPort: 8161
+  type: ClusterIP
