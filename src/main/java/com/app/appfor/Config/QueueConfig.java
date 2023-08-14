@@ -11,7 +11,8 @@ import java.util.logging.Logger;
 
 @Configuration
 public class QueueConfig {
-    private static final String BROKER_URL = "tcp://activemq-service:61616"; // Update with Kubernetes Service name and port
+  //  private static final String BROKER_URL = "tcp://activemq-service:61616";
+  private static final String BROKER_URL = "tcp://localhost:61616";
     private static final Logger LOGGER = Logger.getLogger(QueueConfig.class.getName());
 
     @Bean
@@ -27,7 +28,6 @@ public class QueueConfig {
         factory.setConnectionFactory(activeMQConnectionFactory());
         factory.setConcurrency("1");
 
-        // Example of logging a message
         LOGGER.info("JMS Listener Container Factory initialized.");
 
         return factory;
