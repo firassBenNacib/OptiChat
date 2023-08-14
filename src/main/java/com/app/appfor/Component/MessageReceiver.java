@@ -35,7 +35,7 @@ public class MessageReceiver {
 
 
     private final int batchSize = 125;
-    private final long batchSleepTime = 2L * 60 * 1000;
+    private final long batchSleepTime = 1L * 60 * 1000;
 
     @Autowired
     public MessageReceiver(MeterRegistry meterRegistry, QueueService queueService) {
@@ -166,11 +166,15 @@ public class MessageReceiver {
     }
     public void exportProcessedMessagesToCSV(String filePath) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
-            String[] header = {"Timestamp", "Content"};
+            String[] header = {"Timestamp", "Message", "MessageNumber"};
             writer.writeNext(header);
 
             for (ProcessedMessage processedMessage : processedMessages) {
-                String[] row = {processedMessage.getTimestamp().toString(), processedMessage.getContent().replace("\"", "")};
+                String[] row = {
+                        processedMessage.getTimestamp().toString(),
+                        processedMessage.getMessage().replace("\"", ""),
+                        processedMessage.getMessageNumber().replace("\"", "")
+                };
                 writer.writeNext(row);
             }
         } catch (IOException e) {
