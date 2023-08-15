@@ -85,7 +85,7 @@ public class MessageReceiver {
 
         while (processingCounter.get() == 0) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(240000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -94,7 +94,7 @@ public class MessageReceiver {
 
     private void simulateProcessing(String message) {
         try {
-            Thread.sleep(2000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 @Configuration
 public class QueueConfig {
-    private static final String BROKER_URL = "tcp://activemq-service:61616"; // Update with Kubernetes Service name and port
+    private static final String BROKER_URL = "tcp://activemq-service:61616";
     private static final Logger LOGGER = Logger.getLogger(QueueConfig.class.getName());
 
     @Bean
