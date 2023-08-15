@@ -125,6 +125,7 @@ public class MessageReceiver {
 
     }
 
+<<<<<<< HEAD
 
 
 
@@ -132,6 +133,8 @@ public class MessageReceiver {
 
 
 
+=======
+>>>>>>> parent of 96666b5 (Update MessageReceiver.java)
     private boolean shouldPauseProcessing() {
         int queueSize = getPendingMessages();
         int activeProcessing = processingCounter.get();
