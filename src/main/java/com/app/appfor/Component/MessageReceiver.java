@@ -11,11 +11,12 @@ import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 import com.app.appfor.weka.WekaDataLoader;
 import weka.core.Instances;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,7 +32,7 @@ public class MessageReceiver {
     private List<QueueSizeDataPoint> queueSizeDataPoints = new ArrayList<>();
     private final QueueService queueService;
 
-
+    private TreeMap<Long, MergedDataEntry> mergedDataMap = new TreeMap<>();
 
 
     private final int batchSize = 125;
@@ -89,16 +90,27 @@ public class MessageReceiver {
         processedMessages.add(processedMessage);
 
         int queueSize = getPendingMessages();
+
+
         QueueSizeDataPoint dataPoint = new QueueSizeDataPoint(queueSize);
         queueSizeDataPoints.add(dataPoint);
-
+        long timestamp = System.currentTimeMillis();
+        MergedDataEntry mergedDataEntry = new MergedDataEntry(
+                timestamp,
+                processedMessage.getMessage(),
+                processedMessage.getMessageNumber(),
+                dataPoint.getQueueSize()
+        );
+        mergedDataMap.put(timestamp, mergedDataEntry);
 
         if ((totalProcessedMessages.get() % exportThreshold == 0) || (queueSize == 0) ){
             String processedMessagesFilePath = "C:/Users/MSI/OneDrive/Bureau/processed_messages.csv";
             String queueSizeDataFilePath = "C:/Users/MSI/OneDrive/Bureau/queue_size_data.csv";
+            String mergedDataFilePath = "C:/Users/MSI/OneDrive/Bureau/merged database.csv";
 
             exportProcessedMessagesToCSV(processedMessagesFilePath);
             exportQueueSizeDataToCSV(queueSizeDataFilePath);
+            exportMergedDataToCSV(mergedDataFilePath);
         }
         try {
             Instances processedMessagesData = WekaDataLoader.loadProcessedMessagesData("C:/Users/MSI/OneDrive/Bureau/processed_messages.csv");
@@ -109,6 +121,8 @@ public class MessageReceiver {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
     }
 
 
@@ -140,7 +154,7 @@ public class MessageReceiver {
 
     private void simulateProcessing(String message) {
         try {
-            Thread.sleep(2000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -196,7 +210,56 @@ public class MessageReceiver {
             e.printStackTrace();
         }
     }
+    public void exportMergedDataToCSV(String filePath) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+            String[] header = {"Timestamp", "Message", "MessageNumber", "Queue Size"};
+            writer.writeNext(header);
 
+            for (Map.Entry<Long, MergedDataEntry> entry : mergedDataMap.entrySet()) {
+                MergedDataEntry mergedDataEntry = entry.getValue();
+                String[] row = {
+                        String.valueOf(mergedDataEntry.getTimestamp()),
+                        mergedDataEntry.getMessage().replace("\"", ""),
+                        mergedDataEntry.getMessageNumber().replace("\"", ""),
+                        String.valueOf(mergedDataEntry.getQueueSize())
+                };
+                writer.writeNext(row);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Inner class to represent a merged data entry
+    private static class MergedDataEntry {
+        private long timestamp;
+        private String message;
+        private String messageNumber;
+        private int queueSize;
+
+        public MergedDataEntry(long timestamp, String message, String messageNumber, int queueSize) {
+            this.timestamp = timestamp;
+            this.message = message;
+            this.messageNumber = messageNumber;
+            this.queueSize = queueSize;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public String getMessageNumber() {
+            return messageNumber;
+        }
+
+        public int getQueueSize() {
+            return queueSize;
+        }
+    }
 
 
     private boolean areNoMessagesProcessing() {
@@ -211,12 +274,7 @@ public class MessageReceiver {
 
         return queueService.pendingJobs("message Queue");
     }
-    public List<ProcessedMessage> getProcessedMessages() {
-        return processedMessages;
-    }
-    public List<QueueSizeDataPoint> getQueueSizeDataPoints() {
-        return queueSizeDataPoints;
-    }
+
 
 }
 
