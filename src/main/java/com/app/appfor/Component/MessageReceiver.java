@@ -36,7 +36,7 @@ public class MessageReceiver {
 
 
     private final int batchSize = 125;
-    private final long batchSleepTime = 1L * 60 * 1000;
+    private final long batchSleepTime = 2L * 60 * 1000;
 
     @Autowired
     public MessageReceiver(MeterRegistry meterRegistry, QueueService queueService) {
@@ -56,7 +56,7 @@ public class MessageReceiver {
                 .register(meterRegistry);
     }
 
-    @JmsListener(destination = "message Queue", concurrency = "${spring.jms.listener.concurrency:5}")
+    @JmsListener(destination = "message Queue")
     public void receiveMessage(String message) {
         int exportThreshold = 125;
 
@@ -154,7 +154,7 @@ public class MessageReceiver {
 
     private void simulateProcessing(String message) {
         try {
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -230,7 +230,7 @@ public class MessageReceiver {
         }
     }
 
-    // Inner class to represent a merged data entry
+
     private static class MergedDataEntry {
         private long timestamp;
         private String message;
