@@ -22,7 +22,7 @@ public class MessageReceiver {
 
 
     private final int batchSize = 125;
-    private final long batchSleepTime = 2L * 60 * 1000;
+    private final long batchSleepTime = 3L * 60 * 1000;
 
     @Autowired
     public MessageReceiver(MeterRegistry meterRegistry, QueueService queueService) {
@@ -85,7 +85,7 @@ public class MessageReceiver {
 
         while (processingCounter.get() == 0) {
             try {
-                Thread.sleep(240000);
+                Thread.sleep(20000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
