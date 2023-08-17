@@ -17,6 +17,8 @@ public class MessageReceiver {
     private final AtomicInteger processingCounter = new AtomicInteger(0);
     private final AtomicInteger totalProcessedMessages = new AtomicInteger(0);
 
+    private final AtomicInteger queueDifferenceMetric = new AtomicInteger(0);
+
     private final QueueService queueService;
 
 
@@ -40,6 +42,9 @@ public class MessageReceiver {
         Gauge.builder("pending_messages", this, MessageReceiver::getPendingMessages)
                 .description("Number of pending messages in the queue")
                 .register(meterRegistry);
+        Gauge.builder("queue_difference_metric", queueDifferenceMetric, AtomicInteger::get)
+                .description("Difference between actual queue size and nearest target queue size")
+                .register(meterRegistry);
     }
 
     @JmsListener(destination = "message Queue", concurrency = "${spring.jms.listener.concurrency:5}")
@@ -47,6 +52,7 @@ public class MessageReceiver {
         if (!stopAcceptingMessages.get()) {
             synchronized (processingCounter) {
                 processingCounter.incrementAndGet();
+                computeQueueDifferenceMetric();
             }
             totalProcessedMessages.incrementAndGet();
 
@@ -130,5 +136,15 @@ public class MessageReceiver {
 
     private int getPendingMessages() {
         return queueService.pendingJobs("message Queue");
+    }
+    private void computeQueueDifferenceMetric() {
+        int queueSize = getPendingMessages();
+        int nearestTarget = (queueSize / 1000) * 1000;
+
+        if (queueSize - nearestTarget > 0) {
+            queueDifferenceMetric.set(queueSize - nearestTarget);
+        } else {
+            queueDifferenceMetric.set(0);
+        }
     }
 }
