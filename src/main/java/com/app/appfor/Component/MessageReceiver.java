@@ -1,18 +1,22 @@
 package com.app.appfor.Component;
 
+import com.app.appfor.entities.MergedDataEntry;
+import com.app.appfor.entities.ProcessedMessage;
+import com.app.appfor.entities.QueueSizeDataPoint;
 import com.app.appfor.service.QueueService;
+import com.opencsv.CSVWriter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedWriter;
+
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+
+
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,12 +36,18 @@ public class MessageReceiver {
     private final int batchSize = 125;
     private final long batchSleepTime = 3L * 60 * 1000;
 
-    //private static final String DATA_FILE_PATH = "C:/Users/MSI/OneDrive/Bureau/data.csv";
-    private static final String DATA_FILE_PATH = "/app/data/data.csv";
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
+
+
+    private List<ProcessedMessage> processedMessages = new ArrayList<>();
+
+    private List<QueueSizeDataPoint> queueSizeDataPoints = new ArrayList<>();
+
+    private TreeMap<Long, MergedDataEntry> mergedDataMap = new TreeMap<>();
     @Autowired
+
+
     public MessageReceiver(MeterRegistry meterRegistry, QueueService queueService) {
 
         this.queueService = queueService;
@@ -60,6 +70,10 @@ public class MessageReceiver {
 
     @JmsListener(destination = "message Queue", concurrency = "${spring.jms.listener.concurrency:5}")
     public void receiveMessage(String message) {
+        int exportThreshold = 125;
+
+
+        int queueSize = 0;
         if (!stopAcceptingMessages.get()) {
             synchronized (processingCounter) {
                 processingCounter.incrementAndGet();
@@ -85,8 +99,32 @@ public class MessageReceiver {
                     Thread.currentThread().interrupt();
                 }
             }
+            ProcessedMessage processedMessage = new ProcessedMessage(message);
+            processedMessages.add(processedMessage);
+
+            queueSize = getPendingMessages();
 
 
+            QueueSizeDataPoint dataPoint = new QueueSizeDataPoint(queueSize);
+            queueSizeDataPoints.add(dataPoint);
+            long timestamp = System.currentTimeMillis();
+            MergedDataEntry mergedDataEntry = new MergedDataEntry(
+                    timestamp,
+                    processedMessage.getMessage(),
+                    processedMessage.getMessageNumber(),
+                    dataPoint.getQueueSize()
+            );
+            mergedDataMap.put(timestamp, mergedDataEntry);
+
+        }
+        if ((totalProcessedMessages.get() % exportThreshold == 0) || (queueSize == 0)) {
+            String processedMessagesFilePath = "/app/data/processed_messages.csv";
+            String queueSizeDataFilePath = "/app/data/queue_size_data.csv";
+            String mergedDataFilePath = "/app/data/merged database.csv";
+
+            exportProcessedMessagesToCSV(processedMessagesFilePath);
+            exportQueueSizeDataToCSV(queueSizeDataFilePath);
+            exportMergedDataToCSV(mergedDataFilePath);
         }
     }
 
@@ -108,7 +146,9 @@ public class MessageReceiver {
                 Thread.currentThread().interrupt();
             }
         }
+
     }
+
 
     private void simulateProcessing(String message) {
         try {
@@ -129,7 +169,7 @@ public class MessageReceiver {
 
        
         if (processingCounter.get() == 0 && totalProcessedMessages.get() % batchSize == 0) {
-            recordDataForWeka(message);
+
 
             System.out.println("Completed a batch. Sleeping for " + batchSleepTime + " milliseconds.");
             try {
@@ -139,6 +179,7 @@ public class MessageReceiver {
             }
         }
     }
+
 
     private boolean areNoMessagesProcessing() {
         return processingCounter.get() == 0;
@@ -161,31 +202,58 @@ public class MessageReceiver {
             queueDifferenceMetric.set(0);
         }
     }
-    private void recordDataForWeka(String messageContent) {
-        try {
-
-            FileWriter fw = new FileWriter(DATA_FILE_PATH, true);
-            BufferedWriter bw = new BufferedWriter(fw);
-            PrintWriter pw = new PrintWriter(bw);
-
-            String currentTime = DATE_FORMAT.format(new Date());
 
 
-            pw.println(
-                    currentTime + "," +
-                            getPendingMessages() + "," +
-                            processingCounter.get() + "," +
-                            queueDifferenceMetric.get() + "," +
-                            messageContent.replace(',', ';')
-            );
+    public void exportProcessedMessagesToCSV(String filePath) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+            String[] header = {"Timestamp", "Message", "MessageNumber"};
+            writer.writeNext(header);
 
-
-            pw.close();
-            bw.close();
-            fw.close();
+            for (ProcessedMessage processedMessage : processedMessages) {
+                String[] row = {
+                        processedMessage.getTimestamp().toString(),
+                        processedMessage.getMessage().replace("\"", ""),
+                        processedMessage.getMessageNumber().replace("\"", "")
+                };
+                writer.writeNext(row);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+
+    public void exportQueueSizeDataToCSV(String filePath) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+            String[] header = {"Timestamp", "Queue Size"};
+            writer.writeNext(header);
+
+            for (QueueSizeDataPoint dataPoint : queueSizeDataPoints) {
+                String[] row = {dataPoint.getTimestamp().toString(), String.valueOf(dataPoint.getQueueSize())};
+                writer.writeNext(row);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+    public void exportMergedDataToCSV(String filePath) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+            String[] header = {"Timestamp", "Message", "MessageNumber", "Queue Size"};
+            writer.writeNext(header);
+
+            for (Map.Entry<Long, MergedDataEntry> entry : mergedDataMap.entrySet()) {
+                MergedDataEntry mergedDataEntry = entry.getValue();
+                String[] row = {
+                        String.valueOf(mergedDataEntry.getTimestamp()),
+                        mergedDataEntry.getMessage().replace("\"", ""),
+                        mergedDataEntry.getMessageNumber().replace("\"", ""),
+                        String.valueOf(mergedDataEntry.getQueueSize())
+                };
+                writer.writeNext(row);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
