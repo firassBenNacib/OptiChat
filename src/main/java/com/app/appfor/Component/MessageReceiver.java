@@ -7,6 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,6 +31,11 @@ public class MessageReceiver {
 
     private final int batchSize = 125;
     private final long batchSleepTime = 3L * 60 * 1000;
+
+    //private static final String DATA_FILE_PATH = "C:/Users/MSI/OneDrive/Bureau/data.csv";
+    private static final String DATA_FILE_PATH = "/app/data/data.csv";
+
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
     @Autowired
     public MessageReceiver(MeterRegistry meterRegistry, QueueService queueService) {
@@ -55,6 +66,7 @@ public class MessageReceiver {
                 computeQueueDifferenceMetric();
             }
             totalProcessedMessages.incrementAndGet();
+
 
             if (shouldPauseProcessing()) {
                 stopAcceptingMessages.set(true);
@@ -117,6 +129,8 @@ public class MessageReceiver {
 
        
         if (processingCounter.get() == 0 && totalProcessedMessages.get() % batchSize == 0) {
+            recordDataForWeka(message);
+
             System.out.println("Completed a batch. Sleeping for " + batchSleepTime + " milliseconds.");
             try {
                 Thread.sleep(batchSleepTime);
@@ -147,4 +161,31 @@ public class MessageReceiver {
             queueDifferenceMetric.set(0);
         }
     }
+    private void recordDataForWeka(String messageContent) {
+        try {
+
+            FileWriter fw = new FileWriter(DATA_FILE_PATH, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter pw = new PrintWriter(bw);
+
+            String currentTime = DATE_FORMAT.format(new Date());
+
+
+            pw.println(
+                    currentTime + "," +
+                            getPendingMessages() + "," +
+                            processingCounter.get() + "," +
+                            queueDifferenceMetric.get() + "," +
+                            messageContent.replace(',', ';')
+            );
+
+
+            pw.close();
+            bw.close();
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
