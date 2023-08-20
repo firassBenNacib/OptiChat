@@ -1,8 +1,6 @@
 package com.app.appfor.Component;
 
-import com.app.appfor.entities.MergedDataEntry;
-import com.app.appfor.entities.ProcessedMessage;
-import com.app.appfor.entities.QueueSizeDataPoint;
+import com.app.appfor.entities.*;
 import com.app.appfor.service.QueueService;
 import com.opencsv.CSVWriter;
 import io.micrometer.core.instrument.Gauge;
@@ -16,6 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,12 +36,12 @@ public class MessageReceiver {
     private final long batchSleepTime = 3L * 60 * 1000;
 
 
-
-
-
     private List<ProcessedMessage> processedMessages = new ArrayList<>();
 
     private List<QueueSizeDataPoint> queueSizeDataPoints = new ArrayList<>();
+    
+
+    private List<QueueDifferenceMetricData> queueDifferenceMetricDataList = new ArrayList<>();
 
     private TreeMap<Long, MergedDataEntry> mergedDataMap = new TreeMap<>();
     @Autowired
@@ -71,12 +70,14 @@ public class MessageReceiver {
     @JmsListener(destination = "message Queue", concurrency = "${spring.jms.listener.concurrency:5}")
     public void receiveMessage(String message) {
         int exportThreshold = 125;
-
+        long timestamp = System.currentTimeMillis();
+        LocalDateTime timestamp2 = LocalDateTime.now();
 
         int queueSize = 0;
         if (!stopAcceptingMessages.get()) {
             synchronized (processingCounter) {
                 processingCounter.incrementAndGet();
+
                 computeQueueDifferenceMetric();
             }
             totalProcessedMessages.incrementAndGet();
@@ -99,15 +100,20 @@ public class MessageReceiver {
                     Thread.currentThread().interrupt();
                 }
             }
+
             ProcessedMessage processedMessage = new ProcessedMessage(message);
             processedMessages.add(processedMessage);
 
-            queueSize = getPendingMessages();
-
-
-            QueueSizeDataPoint dataPoint = new QueueSizeDataPoint(queueSize);
+            QueueSizeDataPoint dataPoint = new QueueSizeDataPoint(getPendingMessages());
             queueSizeDataPoints.add(dataPoint);
-            long timestamp = System.currentTimeMillis();
+
+
+
+            QueueDifferenceMetricData queueDifferenceData = new QueueDifferenceMetricData(timestamp2,queueDifferenceMetric.get());
+            queueDifferenceMetricDataList.add(queueDifferenceData);
+
+
+
             MergedDataEntry mergedDataEntry = new MergedDataEntry(
                     timestamp,
                     processedMessage.getMessage(),
@@ -120,10 +126,12 @@ public class MessageReceiver {
         if ((totalProcessedMessages.get() % exportThreshold == 0) || (queueSize == 0)) {
             String processedMessagesFilePath = "/app/data/processed_messages.csv";
             String queueSizeDataFilePath = "/app/data/queue_size_data.csv";
-            String mergedDataFilePath = "/app/data/merged database.csv";
+            String QueueDifferenceFilePath = "/app/data/QueueDifference.csv";
+            String mergedDataFilePath = "/app/data/merged_database.csv";
 
             exportProcessedMessagesToCSV(processedMessagesFilePath);
             exportQueueSizeDataToCSV(queueSizeDataFilePath);
+            exportQueueDifferenceMetricToCSV(QueueDifferenceFilePath);
             exportMergedDataToCSV(mergedDataFilePath);
         }
     }
@@ -237,6 +245,22 @@ public class MessageReceiver {
         }
 
     }
+
+
+    public void exportQueueDifferenceMetricToCSV(String filePath) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+            String[] header = {"Timestamp", "Queue Difference Metric"};
+            writer.writeNext(header);
+
+            for (QueueDifferenceMetricData data : queueDifferenceMetricDataList) {
+                String[] row = {data.getTimestamp().toString(), String.valueOf(data.getMetric())};
+                writer.writeNext(row);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void exportMergedDataToCSV(String filePath) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
             String[] header = {"Timestamp", "Message", "MessageNumber", "Queue Size"};
