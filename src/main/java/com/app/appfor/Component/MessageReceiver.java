@@ -39,7 +39,7 @@ public class MessageReceiver {
     private List<ProcessedMessage> processedMessages = new ArrayList<>();
 
     private List<QueueSizeDataPoint> queueSizeDataPoints = new ArrayList<>();
-    
+
 
     private List<QueueDifferenceMetricData> queueDifferenceMetricDataList = new ArrayList<>();
 
