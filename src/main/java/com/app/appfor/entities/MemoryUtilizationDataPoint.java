@@ -4,14 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 public class MemoryUtilizationDataPoint {
-    private final long timestamp;
+    private LocalDateTime timestamp;
     private final long usedMemory;
 
-    public MemoryUtilizationDataPoint(long timestamp, long usedMemory) {
-        this.timestamp = timestamp;
+    public MemoryUtilizationDataPoint(long usedMemory) {
+        this.timestamp = LocalDateTime.now();
         this.usedMemory = usedMemory;
     }
 

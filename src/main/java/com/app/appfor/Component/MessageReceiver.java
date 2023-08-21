@@ -56,7 +56,7 @@ public class MessageReceiver {
     private List<MemoryUtilizationDataPoint> memoryUtilizationDataPoints = new ArrayList<>();
 
 
-    private TreeMap<Long, MergedDataEntry> mergedDataMap = new TreeMap<>();
+    private TreeMap<LocalDateTime, MergedDataEntry> mergedDataMap = new TreeMap<>();
     @Autowired
 
 
@@ -83,8 +83,8 @@ public class MessageReceiver {
     @JmsListener(destination = "message Queue", concurrency = "${spring.jms.listener.concurrency:5}")
     public void receiveMessage(String message) {
         int exportThreshold = 125;
-        long timestamp = System.currentTimeMillis();
-        LocalDateTime timestamp2 = LocalDateTime.now();
+        LocalDateTime timestamp = LocalDateTime.now();
+
 
 
         int queueSize = 0;
@@ -125,7 +125,7 @@ public class MessageReceiver {
 
 
 
-            QueueDifferenceMetricData queueDifferenceData = new QueueDifferenceMetricData(timestamp2,queueDifferenceMetric.get());
+            QueueDifferenceMetricData queueDifferenceData = new QueueDifferenceMetricData(timestamp,queueDifferenceMetric.get());
             queueDifferenceMetricDataList.add(queueDifferenceData);
 
             LatencyDataPoint latencyDataPoint = new LatencyDataPoint(processingLatency);
@@ -137,26 +137,35 @@ public class MessageReceiver {
 
             int currentMessageCount = messagesSinceLastCheck.incrementAndGet();
             long currentTime = System.currentTimeMillis();
+            double currentThroughput = 0.0;
+
 
             if (currentTime - lastThroughputCheckTimestamp >= 1000) {
-                double throughput = (double) currentMessageCount / ((currentTime - lastThroughputCheckTimestamp) / 1000.0);
-                throughputDataPoints.add(new ThroughputDataPoint(currentTime, throughput));
+                currentThroughput = (double) currentMessageCount / ((currentTime - lastThroughputCheckTimestamp) / 1000.0);
+                throughputDataPoints.add(new ThroughputDataPoint(timestamp, currentThroughput));
 
                 lastThroughputCheckTimestamp = currentTime;
                 messagesSinceLastCheck.set(0);
             }
 
+
             Runtime runtime = Runtime.getRuntime();
             long usedMemory = runtime.totalMemory() - runtime.freeMemory();
-            memoryUtilizationDataPoints.add(new MemoryUtilizationDataPoint(currentTime, usedMemory));
+            memoryUtilizationDataPoints.add(new MemoryUtilizationDataPoint(usedMemory));
 
 
             MergedDataEntry mergedDataEntry = new MergedDataEntry(
                     timestamp,
                     processedMessage.getMessage(),
                     processedMessage.getMessageNumber(),
-                    dataPoint.getQueueSize()
+                    dataPoint.getQueueSize(),
+                    queueDifferenceMetric.get(),
+                    processingLatency,
+                    message.getBytes().length,
+                    currentThroughput,
+                    usedMemory
             );
+
             mergedDataMap.put(timestamp, mergedDataEntry);
 
         }
@@ -363,19 +372,37 @@ public class MessageReceiver {
 
     public void exportMergedDataToCSV(String filePath) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
-            String[] header = {"Timestamp", "Message", "MessageNumber", "Queue Size"};
+            String[] header = {
+                    "Timestamp",
+                    "Message",
+                    "MessageNumber",
+                    "Queue Size",
+                    "Queue Difference Metric",
+                    "Latency (ms)",
+                    "Message Size (bytes)",
+                    "Throughput (messages/sec)",
+                    "Used Memory (bytes)"
+
+            };
             writer.writeNext(header);
 
-            for (Map.Entry<Long, MergedDataEntry> entry : mergedDataMap.entrySet()) {
+            for (Map.Entry<LocalDateTime,MergedDataEntry> entry : mergedDataMap.entrySet()) {
                 MergedDataEntry mergedDataEntry = entry.getValue();
                 String[] row = {
                         String.valueOf(mergedDataEntry.getTimestamp()),
                         mergedDataEntry.getMessage().replace("\"", ""),
                         mergedDataEntry.getMessageNumber().replace("\"", ""),
-                        String.valueOf(mergedDataEntry.getQueueSize())
+                        String.valueOf(mergedDataEntry.getQueueSize()),
+                        String.valueOf(mergedDataEntry.getQueueDifferenceMetric()),
+                        String.valueOf(mergedDataEntry.getLatencyMillis()),
+                        String.valueOf(mergedDataEntry.getMessageSizeBytes()),
+                        String.valueOf(mergedDataEntry.getThroughput()),
+                        String.valueOf(mergedDataEntry.getUsedMemory())
+
                 };
                 writer.writeNext(row);
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
