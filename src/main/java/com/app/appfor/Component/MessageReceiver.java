@@ -1,19 +1,15 @@
 package com.app.appfor.Component;
-
 import com.app.appfor.entities.*;
 import com.app.appfor.service.QueueService;
 import com.opencsv.CSVWriter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
-
-
 import java.io.FileWriter;
 import java.io.IOException;
-
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,6 +27,10 @@ public class MessageReceiver {
     private AtomicInteger messagesSinceLastCheck = new AtomicInteger(0);
 
     private final QueueService queueService;
+
+    @Value("${REPLICA_ID}")
+    private String replicaId;
+
 
 
 
@@ -170,14 +170,14 @@ public class MessageReceiver {
 
         }
         if ((totalProcessedMessages.get() % exportThreshold == 0) || (queueSize == 0)) {
-            String processedMessagesFilePath = "/app/data/processed_messages.csv";
-            String queueSizeDataFilePath = "/app/data/queue_size_data.csv";
-            String QueueDifferenceFilePath = "/app/data/QueueDifference.csv";
-            String LatencyFilePath = "/app/data/Latency.csv";
-            String MessageSizeDataFilePath = "/app/data/MessageSizeData.csv";
-            String ThroughputDataPath = "/app/data/ThroughputData.csv";
-            String MemoryUtilization = "/app/data/MemoryUtilization.csv";
-            String mergedDataFilePath = "/app/data/merged_database.csv";
+            String processedMessagesFilePath = getFilePath("processed_messages.csv");
+            String queueSizeDataFilePath = getFilePath("queue_size_data.csv");
+            String QueueDifferenceFilePath = getFilePath("QueueDifference.csv");
+            String LatencyFilePath = getFilePath("Latency.csv");
+            String MessageSizeDataFilePath = getFilePath("MessageSizeData.csv");
+            String ThroughputDataPath = getFilePath("ThroughputData.csv");
+            String MemoryUtilization = getFilePath("MemoryUtilization.csv");
+            String mergedDataFilePath = getFilePath("merged_database.csv");
 
             exportProcessedMessagesToCSV(processedMessagesFilePath);
             exportQueueSizeDataToCSV(queueSizeDataFilePath);
@@ -187,6 +187,11 @@ public class MessageReceiver {
             exportThroughputDataToCSV(ThroughputDataPath);
             exportMemoryUtilizationToCSV(MemoryUtilization);
             exportMergedDataToCSV(mergedDataFilePath);
+
+
+
+
+
         }
     }
 
@@ -407,4 +412,8 @@ public class MessageReceiver {
             e.printStackTrace();
         }
     }
+    private String getFilePath(String baseFileName) {
+        return "/app/data/" + replicaId + "_" + baseFileName;
+    }
+
 }
