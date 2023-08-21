@@ -1,6 +1,7 @@
 package com.app.appfor.Component;
 import com.app.appfor.entities.*;
 import com.app.appfor.service.QueueService;
+import com.app.appfor.weka.CSVtoARFFConverter;
 import com.opencsv.CSVWriter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -14,6 +15,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.app.appfor.weka.CSVtoARFFConverter.convert;
 
 @Component
 public class MessageReceiver {
@@ -177,7 +180,9 @@ public class MessageReceiver {
             String MessageSizeDataFilePath = getFilePath("MessageSizeData.csv");
             String ThroughputDataPath = getFilePath("ThroughputData.csv");
             String MemoryUtilization = getFilePath("MemoryUtilization.csv");
-            String mergedDataFilePath = getFilePath("merged_database.csv");
+            String mergedDataFilePath = getFilePath("merged_dataset.csv");
+            String mergedARFFFilePath = getFilePath("merged_dataset.arff");
+
 
             exportProcessedMessagesToCSV(processedMessagesFilePath);
             exportQueueSizeDataToCSV(queueSizeDataFilePath);
@@ -187,6 +192,8 @@ public class MessageReceiver {
             exportThroughputDataToCSV(ThroughputDataPath);
             exportMemoryUtilizationToCSV(MemoryUtilization);
             exportMergedDataToCSV(mergedDataFilePath);
+
+            convert(mergedDataFilePath, mergedARFFFilePath);
 
 
 
