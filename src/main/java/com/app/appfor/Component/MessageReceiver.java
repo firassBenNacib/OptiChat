@@ -1,7 +1,6 @@
 package com.app.appfor.Component;
 import com.app.appfor.entities.*;
 import com.app.appfor.service.QueueService;
-import com.app.appfor.weka.CSVtoARFFConverter;
 import com.opencsv.CSVWriter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -9,13 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
+
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import static com.app.appfor.weka.CSVtoARFFConverter.convert;
 
 @Component
@@ -33,8 +33,6 @@ public class MessageReceiver {
 
     @Value("${REPLICA_ID}")
     private String replicaId;
-
-
 
 
     private final int batchSize = 125;
@@ -60,6 +58,7 @@ public class MessageReceiver {
 
 
     private TreeMap<LocalDateTime, MergedDataEntry> mergedDataMap = new TreeMap<>();
+
     @Autowired
 
 
@@ -87,7 +86,6 @@ public class MessageReceiver {
     public void receiveMessage(String message) {
         int exportThreshold = 125;
         LocalDateTime timestamp = LocalDateTime.now();
-
 
 
         int queueSize = 0;
@@ -127,8 +125,7 @@ public class MessageReceiver {
             queueSizeDataPoints.add(dataPoint);
 
 
-
-            QueueDifferenceMetricData queueDifferenceData = new QueueDifferenceMetricData(timestamp,queueDifferenceMetric.get());
+            QueueDifferenceMetricData queueDifferenceData = new QueueDifferenceMetricData(timestamp, queueDifferenceMetric.get());
             queueDifferenceMetricDataList.add(queueDifferenceData);
 
             LatencyDataPoint latencyDataPoint = new LatencyDataPoint(processingLatency);
@@ -196,9 +193,6 @@ public class MessageReceiver {
             convert(mergedDataFilePath, mergedARFFFilePath);
 
 
-
-
-
         }
     }
 
@@ -241,7 +235,7 @@ public class MessageReceiver {
             initiateGracefulShutdown();
         }
 
-       
+
         if (processingCounter.get() == 0 && totalProcessedMessages.get() % batchSize == 0) {
 
 
@@ -266,6 +260,7 @@ public class MessageReceiver {
     private int getPendingMessages() {
         return queueService.pendingJobs("message Queue");
     }
+
     private void computeQueueDifferenceMetric() {
         int queueSize = getPendingMessages();
         int nearestTarget = (queueSize / 1000) * 1000;
@@ -326,6 +321,7 @@ public class MessageReceiver {
             e.printStackTrace();
         }
     }
+
     public void exportLatencyDataToCSV(String filePath) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
             String[] header = {"Timestamp", "Latency (ms)"};
@@ -367,6 +363,7 @@ public class MessageReceiver {
             e.printStackTrace();
         }
     }
+
     public void exportMemoryUtilizationToCSV(String filePath) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
             String[] header = {"Timestamp", "Used Memory (bytes)"};
@@ -398,7 +395,7 @@ public class MessageReceiver {
             };
             writer.writeNext(header);
 
-            for (Map.Entry<LocalDateTime,MergedDataEntry> entry : mergedDataMap.entrySet()) {
+            for (Map.Entry<LocalDateTime, MergedDataEntry> entry : mergedDataMap.entrySet()) {
                 MergedDataEntry mergedDataEntry = entry.getValue();
                 String[] row = {
                         String.valueOf(mergedDataEntry.getTimestamp()),
@@ -419,8 +416,20 @@ public class MessageReceiver {
             e.printStackTrace();
         }
     }
-    private String getFilePath(String baseFileName) {
-        return "/app/data/" + replicaId + "_" + baseFileName;
+
+    private String getBaseDirectory() {
+        String baseDir = "/app/data/" + replicaId;
+        File dir = new File(baseDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+            return baseDir;
+
     }
+
+    private String getFilePath(String baseFileName) {
+        return getBaseDirectory() + "/" + baseFileName;
+    }
+
 
 }

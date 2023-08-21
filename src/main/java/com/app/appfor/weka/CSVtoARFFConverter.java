@@ -22,6 +22,4 @@ public class CSVtoARFFConverter {
             e.printStackTrace();
         }
     }
-
-
 }

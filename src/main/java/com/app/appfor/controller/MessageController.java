@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 public class MessageController {
 
@@ -21,11 +23,23 @@ public class MessageController {
         messageSender.sendMessage(message);
     }
 
-    @PostMapping("/send-multiple")
-    public void sendMultipleMessages(@RequestBody String message, @RequestParam int numMessages) {
+    @PostMapping("/send-multiple-message")
+    public void sendMultipleMessage(@RequestBody String message, @RequestParam int numMessages) {
 
         for (int i = 0; i < numMessages; i++) {
             messageSender.sendMessage(message + " " + i);
+        }
+    }
+
+    @PostMapping("/send-multiple-messages")
+    public void sendMultipleMessages(@RequestBody Map<String, Integer> messages) {
+        for (Map.Entry<String, Integer> entry : messages.entrySet()) {
+            String message = entry.getKey();
+            int numMessages = entry.getValue();
+
+            for (int i = 0; i < numMessages; i++) {
+                messageSender.sendMessage(message + " " + i);
+            }
         }
     }
 }
