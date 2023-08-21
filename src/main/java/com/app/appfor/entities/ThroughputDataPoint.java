@@ -5,13 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @AllArgsConstructor
-public class QueueDifferenceMetricData {
-    private final LocalDateTime timestamp;
-    private final int metric;
+public class ThroughputDataPoint {
+    private final long timestamp;
+    private final double throughput;
 
 }

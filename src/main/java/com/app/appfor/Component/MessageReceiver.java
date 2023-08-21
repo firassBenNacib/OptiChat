@@ -28,6 +28,8 @@ public class MessageReceiver {
 
     private final AtomicInteger queueDifferenceMetric = new AtomicInteger(0);
 
+    private AtomicInteger messagesSinceLastCheck = new AtomicInteger(0);
+
     private final QueueService queueService;
 
 
@@ -35,6 +37,7 @@ public class MessageReceiver {
     private final int batchSize = 125;
     private final long batchSleepTime = 3L * 60 * 1000;
 
+    private long lastThroughputCheckTimestamp = System.currentTimeMillis();
 
     private List<ProcessedMessage> processedMessages = new ArrayList<>();
 
@@ -42,6 +45,16 @@ public class MessageReceiver {
 
 
     private List<QueueDifferenceMetricData> queueDifferenceMetricDataList = new ArrayList<>();
+
+    private List<LatencyDataPoint> latencyDataPoints = new ArrayList<>();
+
+    private List<MessageSizeDataPoint> messageSizeDataPoints = new ArrayList<>();
+
+
+    private List<ThroughputDataPoint> throughputDataPoints = new ArrayList<>();
+
+    private List<MemoryUtilizationDataPoint> memoryUtilizationDataPoints = new ArrayList<>();
+
 
     private TreeMap<Long, MergedDataEntry> mergedDataMap = new TreeMap<>();
     @Autowired
@@ -73,6 +86,7 @@ public class MessageReceiver {
         long timestamp = System.currentTimeMillis();
         LocalDateTime timestamp2 = LocalDateTime.now();
 
+
         int queueSize = 0;
         if (!stopAcceptingMessages.get()) {
             synchronized (processingCounter) {
@@ -88,10 +102,12 @@ public class MessageReceiver {
                 waitForResume();
                 stopAcceptingMessages.set(false);
             }
+            long startProcessingTime = System.currentTimeMillis();
 
             simulateProcessing(message);
 
-
+            long endProcessingTime = System.currentTimeMillis();
+            long processingLatency = endProcessingTime - startProcessingTime;
             if (processingCounter.get() == 0 && totalProcessedMessages.get() % batchSize == 0) {
                 System.out.println("Completed a batch. Sleeping for " + batchSleepTime + " milliseconds.");
                 try {
@@ -112,6 +128,27 @@ public class MessageReceiver {
             QueueDifferenceMetricData queueDifferenceData = new QueueDifferenceMetricData(timestamp2,queueDifferenceMetric.get());
             queueDifferenceMetricDataList.add(queueDifferenceData);
 
+            LatencyDataPoint latencyDataPoint = new LatencyDataPoint(processingLatency);
+            latencyDataPoints.add(latencyDataPoint);
+
+            MessageSizeDataPoint messageSizeDataPoint = new MessageSizeDataPoint(message.getBytes().length);
+            messageSizeDataPoints.add(messageSizeDataPoint);
+
+
+            int currentMessageCount = messagesSinceLastCheck.incrementAndGet();
+            long currentTime = System.currentTimeMillis();
+
+            if (currentTime - lastThroughputCheckTimestamp >= 1000) {
+                double throughput = (double) currentMessageCount / ((currentTime - lastThroughputCheckTimestamp) / 1000.0);
+                throughputDataPoints.add(new ThroughputDataPoint(currentTime, throughput));
+
+                lastThroughputCheckTimestamp = currentTime;
+                messagesSinceLastCheck.set(0);
+            }
+
+            Runtime runtime = Runtime.getRuntime();
+            long usedMemory = runtime.totalMemory() - runtime.freeMemory();
+            memoryUtilizationDataPoints.add(new MemoryUtilizationDataPoint(currentTime, usedMemory));
 
 
             MergedDataEntry mergedDataEntry = new MergedDataEntry(
@@ -127,11 +164,19 @@ public class MessageReceiver {
             String processedMessagesFilePath = "/app/data/processed_messages.csv";
             String queueSizeDataFilePath = "/app/data/queue_size_data.csv";
             String QueueDifferenceFilePath = "/app/data/QueueDifference.csv";
+            String LatencyFilePath = "/app/data/Latency.csv";
+            String MessageSizeDataFilePath = "/app/data/MessageSizeData.csv";
+            String ThroughputDataPath = "/app/data/ThroughputData.csv";
+            String MemoryUtilization = "/app/data/MemoryUtilization.csv";
             String mergedDataFilePath = "/app/data/merged_database.csv";
 
             exportProcessedMessagesToCSV(processedMessagesFilePath);
             exportQueueSizeDataToCSV(queueSizeDataFilePath);
             exportQueueDifferenceMetricToCSV(QueueDifferenceFilePath);
+            exportLatencyDataToCSV(LatencyFilePath);
+            exportMessageSizeDataToCSV(MessageSizeDataFilePath);
+            exportThroughputDataToCSV(ThroughputDataPath);
+            exportMemoryUtilizationToCSV(MemoryUtilization);
             exportMergedDataToCSV(mergedDataFilePath);
         }
     }
@@ -260,6 +305,61 @@ public class MessageReceiver {
             e.printStackTrace();
         }
     }
+    public void exportLatencyDataToCSV(String filePath) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+            String[] header = {"Timestamp", "Latency (ms)"};
+            writer.writeNext(header);
+
+            for (LatencyDataPoint dataPoint : latencyDataPoints) {
+                String[] row = {dataPoint.getTimestamp().toString(), String.valueOf(dataPoint.getLatencyMillis())};
+                writer.writeNext(row);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void exportMessageSizeDataToCSV(String filePath) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+            String[] header = {"Timestamp", "Message Size (bytes)"};
+            writer.writeNext(header);
+
+            for (MessageSizeDataPoint dataPoint : messageSizeDataPoints) {
+                String[] row = {dataPoint.getTimestamp().toString(), String.valueOf(dataPoint.getMessageSizeBytes())};
+                writer.writeNext(row);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void exportThroughputDataToCSV(String filePath) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+            String[] header = {"Timestamp", "Throughput (messages/sec)"};
+            writer.writeNext(header);
+
+            for (ThroughputDataPoint dataPoint : throughputDataPoints) {
+                String[] row = {String.valueOf(dataPoint.getTimestamp()), String.valueOf(dataPoint.getThroughput())};
+                writer.writeNext(row);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public void exportMemoryUtilizationToCSV(String filePath) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+            String[] header = {"Timestamp", "Used Memory (bytes)"};
+            writer.writeNext(header);
+
+            for (MemoryUtilizationDataPoint dataPoint : memoryUtilizationDataPoints) {
+                String[] row = {String.valueOf(dataPoint.getTimestamp()), String.valueOf(dataPoint.getUsedMemory())};
+                writer.writeNext(row);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void exportMergedDataToCSV(String filePath) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
