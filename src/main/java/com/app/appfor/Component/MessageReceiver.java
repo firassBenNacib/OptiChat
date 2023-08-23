@@ -1,7 +1,9 @@
 package com.app.appfor.Component;
 import com.app.appfor.entities.*;
 import com.app.appfor.service.QueueService;
+import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import com.opencsv.exceptions.CsvException;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -179,7 +179,8 @@ public class MessageReceiver {
             String MemoryUtilization = getFilePath("MemoryUtilization.csv");
             String mergedDataFilePath = getFilePath("merged_dataset.csv");
             String mergedARFFFilePath = getFilePath("merged_dataset.arff");
-
+            String mergedRepArffFilePath = "/app/data/merged_rep.arff";
+            String mergedRepFilePath = "/app/data/merged_rep.csv";
 
             exportProcessedMessagesToCSV(processedMessagesFilePath);
             exportQueueSizeDataToCSV(queueSizeDataFilePath);
@@ -189,9 +190,9 @@ public class MessageReceiver {
             exportThroughputDataToCSV(ThroughputDataPath);
             exportMemoryUtilizationToCSV(MemoryUtilization);
             exportMergedDataToCSV(mergedDataFilePath);
-
+            exportMergedReplicaSet(mergedDataFilePath);
             convert(mergedDataFilePath, mergedARFFFilePath);
-
+            convert(mergedRepFilePath, mergedRepArffFilePath);
 
         }
     }
@@ -413,6 +414,72 @@ public class MessageReceiver {
             }
 
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public void exportMergedReplicaSet(String mergedcsvFilePath) {
+
+        String mergedRepFilePath = "/app/data/merged_rep.csv";
+
+        String[] header = {
+                "Timestamp",
+                "Message",
+                "MessageNumber",
+                "Queue Size",
+                "Queue Difference Metric",
+                "Latency (ms)",
+                "Message Size (bytes)",
+                "Throughput (messages/sec)",
+                "Used Memory (bytes)"
+        };
+
+        try {
+
+            List<String[]> existingData = new ArrayList<>();
+            try (Reader reader = new FileReader(mergedRepFilePath);
+                 CSVReader csvReader = new CSVReader(reader)) {
+                existingData.addAll(csvReader.readAll());
+            } catch (FileNotFoundException e) {
+
+                existingData.add(header);
+            }
+
+
+            try (Reader reader = new FileReader(mergedcsvFilePath);
+                 CSVReader csvReader = new CSVReader(reader)) {
+                List<String[]> newData = csvReader.readAll();
+
+
+                for (int i = 1; i < newData.size(); i++) {
+                    String[] row = newData.get(i);
+
+
+                    boolean isDuplicate = false;
+                    for (String[] existingRow : existingData) {
+                        if (Arrays.equals(row, existingRow)) {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+
+                    if (!isDuplicate) {
+                        existingData.add(row);
+                    }
+                }
+            } catch (CsvException e) {
+                throw new RuntimeException(e);
+            }
+
+
+            try (Writer writer = new FileWriter(mergedRepFilePath);
+                 CSVWriter csvWriter = new CSVWriter(writer)) {
+                csvWriter.writeAll(existingData);
+            }
+
+
+
+
+        } catch (IOException | CsvException e) {
             e.printStackTrace();
         }
     }
