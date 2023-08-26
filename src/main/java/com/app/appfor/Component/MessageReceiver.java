@@ -179,8 +179,6 @@ public class MessageReceiver {
             String MemoryUtilization = getFilePath("MemoryUtilization.csv");
             String mergedDataFilePath = getFilePath("merged_dataset.csv");
             String mergedARFFFilePath = getFilePath("merged_dataset.arff");
-            String mergedRepArffFilePath = "/app/data/merged_rep.arff";
-            String mergedRepFilePath = "/app/data/merged_rep.csv";
 
             exportProcessedMessagesToCSV(processedMessagesFilePath);
             exportQueueSizeDataToCSV(queueSizeDataFilePath);
@@ -190,9 +188,9 @@ public class MessageReceiver {
             exportThroughputDataToCSV(ThroughputDataPath);
             exportMemoryUtilizationToCSV(MemoryUtilization);
             exportMergedDataToCSV(mergedDataFilePath);
-            exportMergedReplicaSet(mergedDataFilePath);
+
             convert(mergedDataFilePath, mergedARFFFilePath);
-            convert(mergedRepFilePath, mergedRepArffFilePath);
+
 
         }
     }
@@ -236,12 +234,17 @@ public class MessageReceiver {
             initiateGracefulShutdown();
         }
 
-
+        String mergedRepArffFilePath = "/app/data/merged_rep.arff";
+        String mergedRepFilePath = "/app/data/merged_rep.csv";
+        String mergedDataFilePath = getFilePath("merged_dataset.csv");
         if (processingCounter.get() == 0 && totalProcessedMessages.get() % batchSize == 0) {
-
+            exportMergedReplicaSet(mergedDataFilePath);
+            convert(mergedRepFilePath, mergedRepArffFilePath);
 
             System.out.println("Completed a batch. Sleeping for " + batchSleepTime + " milliseconds.");
+
             try {
+
                 Thread.sleep(batchSleepTime);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
