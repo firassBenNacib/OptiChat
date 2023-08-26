@@ -27,6 +27,8 @@ public class MessageReceiver {
 
     private final AtomicInteger queueDifferenceMetric = new AtomicInteger(0);
 
+
+
     private AtomicInteger messagesSinceLastCheck = new AtomicInteger(0);
 
     private final QueueService queueService;
@@ -36,7 +38,7 @@ public class MessageReceiver {
 
 
     private final int batchSize = 125;
-    private final long batchSleepTime = 3L * 60 * 1000;
+    private final long batchSleepTime = 4L * 60 * 1000;
 
     private long lastThroughputCheckTimestamp = System.currentTimeMillis();
 
@@ -109,14 +111,7 @@ public class MessageReceiver {
 
             long endProcessingTime = System.currentTimeMillis();
             long processingLatency = endProcessingTime - startProcessingTime;
-            if (processingCounter.get() == 0 && totalProcessedMessages.get() % batchSize == 0) {
-                System.out.println("Completed a batch. Sleeping for " + batchSleepTime + " milliseconds.");
-                try {
-                    Thread.sleep(batchSleepTime);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
+
 
             ProcessedMessage processedMessage = new ProcessedMessage(message);
             processedMessages.add(processedMessage);
@@ -237,7 +232,7 @@ public class MessageReceiver {
         String mergedRepArffFilePath = "/app/data/merged_rep.arff";
         String mergedRepFilePath = "/app/data/merged_rep.csv";
         String mergedDataFilePath = getFilePath("merged_dataset.csv");
-        if (processingCounter.get() == 0 && totalProcessedMessages.get() % batchSize == 0) {
+        if (processingCounter.get() == 0 && totalProcessedMessages.get() % batchSize == 0)  {
             exportMergedReplicaSet(mergedDataFilePath);
             convert(mergedRepFilePath, mergedRepArffFilePath);
 
@@ -249,6 +244,10 @@ public class MessageReceiver {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+        }
+        if (getPendingMessages() == 0){
+            exportMergedReplicaSet(mergedDataFilePath);
+            convert(mergedRepFilePath, mergedRepArffFilePath);
         }
     }
 
