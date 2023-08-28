@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-webhook-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-webhook
+  template:
+    metadata:
+      labels:
+        app: grafana-webhook
+    spec:
+      serviceAccountName: myapp-serviceaccount
+      containers:
+      - name: grafana-webhook
+        image: firaskill12/grafana:latest
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-webhook-service
+spec:
+  selector:
+    app: grafana-webhook
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+

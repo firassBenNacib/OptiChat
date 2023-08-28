@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: myapp-serviceaccount
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: scaledobject-role
+rules:
+- apiGroups: ["keda.sh"]
+  resources: ["scaledobjects"]
+  verbs: ["get", "list", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: scaledobject-rolebinding
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: myapp-serviceaccount  # use 'default' if you didn't create a new service account
+  namespace: default
+roleRef:
+  kind: Role
+  name: scaledobject-role
+  apiGroup: rbac.authorization.k8s.io
+
