@@ -21,7 +21,7 @@ metadata:
   namespace: default
 subjects:
 - kind: ServiceAccount
-  name: myapp-serviceaccount  # use 'default' if you didn't create a new service account
+  name: myapp-serviceaccount 
   namespace: default
 roleRef:
   kind: Role
