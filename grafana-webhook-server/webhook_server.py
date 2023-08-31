@@ -29,7 +29,7 @@ def grafana_webhook():
     return jsonify({"message": "Webhook received"}), 200
 
 def get_queue_size_from_prometheus():
-    prometheus_url = "http://10.110.96.5:9090/api/v1/query"
+    prometheus_url = "http://10.110.96.5:9090/api/v1/query"   # NOSONAR
     query = {"query": "sum(pending_messages)"} 
     response = requests.get(prometheus_url, params=query)
     result = response.json()
