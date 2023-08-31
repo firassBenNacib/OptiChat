@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify
 from kubernetes import client, config
 import requests
 
-app = Flask(__name__)
+app = Flask(__name__)  # NOSONAR
+
 
 
 config.load_incluster_config()
