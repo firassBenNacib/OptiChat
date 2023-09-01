@@ -55,6 +55,7 @@ def get_queue_size_from_prometheus():
 
     return queue_size
     
+    
 def get_queue_difference_from_prometheus():
     prometheus_url = "http://10.110.96.5:9090/api/v1/query"   # NOSONAR
     query = {"query": "queue_difference_metric"}  
