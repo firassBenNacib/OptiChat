@@ -46,10 +46,12 @@ def get_queue_size_from_prometheus():
 
     print(f"Prometheus Response: {result}")
     
-
-    queue_size = int(float(result['data']['result'][0]['value'][1]))
-    
-    print(f"Extracted Queue Size: {queue_size}")
+    try:
+        queue_size = int(float(result['data']['result'][0]['value'][1]))
+        print(f"Extracted Queue Size: {queue_size}")
+    except (KeyError, IndexError, TypeError, ValueError):
+        print("No data in queue size")
+        return 0
 
     return queue_size
     
