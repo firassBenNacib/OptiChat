@@ -32,7 +32,7 @@ public class MetricsController {
         return "Traffic tracked = " + getTrafficCount();
     }
 
-    @Scheduled(fixedDelay = 30000) // Runs every 30 seconds
+    @Scheduled(fixedDelay = 30000)
     public void decrementTraffic() {
         decreaseTrafficCount();
     }

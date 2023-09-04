@@ -27,7 +27,7 @@ public class QueueConfig {
         factory.setConnectionFactory(activeMQConnectionFactory());
         factory.setConcurrency("1");
 
-        // Example of logging a message
+
         LOGGER.info("JMS Listener Container Factory initialized.");
 
         return factory;
