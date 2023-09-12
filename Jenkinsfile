@@ -100,33 +100,37 @@ stage('Update Chart') {
         script {
             withCredentials([string(credentialsId: 'GITHUB_USERNAME', variable: 'GITHUB_USERNAME'),
                              string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
-                
-                sh 'git clone https://' + GIT_REPO_URL + ' helm-repo'
+
+                // Conditional clone logic starts here
+                sh '''
+                if [ -d "helm-repo" ]; then
+                    cd helm-repo
+                    git pull
+                else
+                    git clone https://''' + GIT_REPO_URL + ''' helm-repo
+                fi
+                '''
+                // Conditional clone logic ends here
 
                 dir('helm-repo/helm') {
-                  
                     def currentTag = sh(returnStdout: true, script: 'grep "^ *tag:" values.yaml | awk \'{print $2}\'').trim()
 
-                   
-                   
                     sh "sed -i 's/^ *tag: ${currentTag}/  tag: ${BUILD_NUMBER}/' values.yaml"
 
-                 
                     sh 'git status'
 
-                  
                     sh 'git config user.email "firas.bennacib@esprit.tn"'
                     sh "git config user.name $GIT_USER_NAME"
                     sh 'git add values.yaml'
                     sh "git commit -m 'Update values.yaml with build version ${BUILD_NUMBER}'"
 
-           
                     sh "git push https://$GITHUB_USERNAME:$GITHUB_TOKEN@$GIT_REPO_URL HEAD:main"
                 }
             }
         }
     }
 }
+
 
 
 
