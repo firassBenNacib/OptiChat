@@ -101,7 +101,7 @@ stage('Update Chart') {
             withCredentials([string(credentialsId: 'GITHUB_USERNAME', variable: 'GITHUB_USERNAME'),
                              string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
 
-                // Conditional clone logic starts here
+               
                 sh '''
                 if [ -d "helm-repo" ]; then
                     cd helm-repo
@@ -110,7 +110,7 @@ stage('Update Chart') {
                     git clone https://''' + GIT_REPO_URL + ''' helm-repo
                 fi
                 '''
-                // Conditional clone logic ends here
+               
 
                 dir('helm-repo/helm') {
                     def currentTag = sh(returnStdout: true, script: 'grep "^ *tag:" values.yaml | awk \'{print $2}\'').trim()
